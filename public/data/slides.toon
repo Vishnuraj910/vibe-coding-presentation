@@ -1,0 +1,98 @@
+presentation_title: "The Vibe Coding Era: From Coder to Pilot"
+target_audience: "Young Developers"
+slides[15]:
+- slide_number: 1
+  heading: "The Provocation"
+  points[3]:
+    - "Why are you still hand-cranking code while the world is vibe coding?"
+    - "The shift from 'writing lines' to 'steering intent'."
+    - "The cost of staying 'manual' in an automated industry."
+- slide_number: 2
+  heading: "The Engine Analogy"
+  points[4]:
+    - "The Agent is the Car Engine: Raw power, speed, and torque."
+    - "The Developer is the Driver: Steering, braking, and navigation."
+    - "Logic is the chassis; without it, the engine (AI) will just twist the frame."
+    - "A faster engine only makes a bad driver crash sooner."
+- slide_number: 3
+  heading: "The State of AI Adoption"
+  points[3]:
+    - "Visualizing the gap: AI Adopters vs. Traditional Coders."
+    - "Industry stats on speed-to-market using coding agents."
+    - "Why 'Agentic Workflows' are the 2026 standard."
+- slide_number: 4
+  heading: "Choosing Your Fuel (Model Tradeoffs)"
+  points[3]:
+    - "Cost vs. Quality: LLM comparison (o1/Pro vs. Flash/Haiku)."
+    - "When to use High-Reasoning (Architecting) vs. High-Speed (Boilerplate)."
+    - "Economic engineering: Don't burn a 'Pro' token on a 'Flash' task."
+- slide_number: 5
+  heading: "The Architecture of Intent (Markdowns)"
+  points[4]:
+    - "Agents: Defining the persona and expertise."
+    - "Skills: Mapping what the agent can actually execute."
+    - "Rules: The 'Hard Constraints' (Linting, Styles, Frameworks)."
+    - "Markdown as the universal language for Agent instructions."
+- slide_number: 6
+  heading: "Context: Your Short-Term Memory"
+  points[4]:
+    - "Context is all that matters—preserve it like your own memory."
+    - "Attach Files strategically: More context isn't always better context."
+    - "Context Window Poisoning: How circular errors and logs kill AI logic."
+    - "Integrity Checks: Validating what the AI 'remembers' before it acts."
+- slide_number: 7
+  heading: "Strategic Workflow: Act vs. Plan"
+  points[3]:
+    - "For complex tasks: Always demand a Markdown Plan first."
+    - "The 'Human-in-the-Loop' (HITL) checkpoint: Verify the plan before execution."
+    - "Avoiding the 'Refactoring Rampage': Never let an AI touch the whole project at once."
+- slide_number: 8
+  heading: "The Plumbing: MCPs vs. CLIs"
+  points[4]:
+    - "CLIs are the past; Model Context Protocol (MCP) is the future."
+    - "Introduction to Context7: Up-to-date, version-specific documentation."
+    - "The Challenge: Permissioning and state drift in agentic loops."
+    - "Industry Trend: Moving toward the 'Model as the Environment'."
+- slide_number: 9
+  heading: "Full-Stack Vibe: Handling Multiple Stacks"
+  points[3]:
+    - "Single-Project Folders: Keeping Client and Server in one view."
+    - "Next.js and TanStack Start: Unified context for both sides of the app."
+    - "Monorepo Strategy: How to scope an Agent to a specific package."
+- slide_number: 10
+  heading: "Guardrails & Automated Safety"
+  points[3]:
+    - "Pre-tool Hooks: Auto-formatting, ESLint, and Tests as entry gates."
+    - "Code Review Agents: Using a second AI to audit the first."
+    - "Agent-ref-id: Using 'lovable-tagger' for auto-tagging AI vs. Human code."
+- slide_number: 11
+  heading: "Test-Driven Vibe Coding (TDVC)"
+  points[3]:
+    - "The pace of generation requires the pace of verification."
+    - "Workflow: Failing Test -> AI Generation -> Green Light."
+    - "Testing is more important now than it was in the manual era."
+- slide_number: 12
+  heading: "Pruning & Knowledge Compression"
+  points[3]:
+    - "Context Windows: Using 'Smol' or compact formats to save tokens."
+    - "Pruning: Periodically summarizing the chat and starting fresh."
+    - "Dual Documentation: READMEs for Humans vs. .md summaries for Agents."
+- slide_number: 13
+  heading: "The Toolbox (Search Before Building)"
+  points[4]:
+    - "skills.sh: Pre-built agent skills library."
+    - "Awesome-Copilot: Best practices for GitHub tools."
+    - "Souls.directory: Advanced Claude/Agent prompts."
+    - "app.aitmpl.com/agents: Ready-to-use agent templates."
+- slide_number: 14
+  heading: "The Local Engine"
+  points[3]:
+    - "Privacy and Speed: Running LLMs locally."
+    - "llmfit: One command to see what your hardware can actually handle."
+    - "Finding the 'Sweet Spot' between VRAM and model quality."
+- slide_number: 15
+  heading: "Mindset: Architect, Not Coder"
+  points[3]:
+    - "You are a Product Owner now; you manage the 'output' of the AI."
+    - "Cognitive Offloading: Use AI for the 'grunt work,' save your brain for the 'Hard Logic'."
+    - "The Warning: You must be able to debug manually or you will be locked out of your own production."

@@ -1,0 +1,14 @@
+# Cloudflare Pages configuration
+# This file should be in the root of your repository
+
+# Build settings
+build:
+  command: "npm run build"
+  publish: "dist"
+
+# Environment variables (optional)
+env:
+  NODE_VERSION: "20"
+
+# Build directory (this tells Cloudflare to build from the slideshow-app directory)
+# Note: This file should actually be in the root, but we'll create a proper setup

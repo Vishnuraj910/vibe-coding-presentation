@@ -1,0 +1,50 @@
+[
+  {
+    "id": 1,
+    "title": "Welcome to the Future",
+    "content": "Experience the next generation of presentation design. Clean, fluid, and beautifully animated.",
+    "image": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 2,
+    "title": "Minimalist Design",
+    "content": "Less is more. Our approach focuses on clarity and purpose, removing everything unnecessary.",
+    "image": "https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 3,
+    "title": "Smooth Animations",
+    "content": "Every transition is crafted with precision. Spring physics create natural, organic movement.",
+    "image": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 4,
+    "title": "Dark Mode Excellence",
+    "content": "True OLED black for perfect contrast. Designed for focus and reduced eye strain.",
+    "image": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 5,
+    "title": "Responsive & Adaptive",
+    "content": "Looks perfect on every device. From mobile to desktop, the experience scales beautifully.",
+    "image": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 6,
+    "title": "Keyboard Navigation",
+    "content": "Navigate with arrow keys. Press F for fullscreen. Pure efficiency at your fingertips.",
+    "image": "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 7,
+    "title": "Glassmorphism UI",
+    "content": "Modern frosted glass effects create depth and hierarchy without visual clutter.",
+    "image": "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200&h=800&fit=crop"
+  },
+  {
+    "id": 8,
+    "title": "Start Creating",
+    "content": "Your ideas deserve beautiful presentation. Begin your journey with us today.",
+    "image": "https://images.unsplash.com/photo-1499750310107-5fef28a66643?w=1200&h=800&fit=crop"
+  }
+]

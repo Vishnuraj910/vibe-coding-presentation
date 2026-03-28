@@ -163,6 +163,52 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
         ))}
       </div>
 
+      {data.into_speaker && (
+        <div style={{
+          opacity: visible ? 1 : 0,
+          transform: visible ? "translateY(0)" : "translateY(14px)",
+          transition: "all 0.8s cubic-bezier(0.4,0,0,0.2,1) 0.65s",
+          marginTop: "4px"
+        }}>
+          <div style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: "4px",
+            padding: "12px 22px",
+            borderRadius: "14px",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.16)",
+            backdropFilter: "blur(16px)"
+          }}>
+            <div style={{
+              fontSize: "11px",
+              letterSpacing: "0.14em",
+              textTransform: "uppercase" as const,
+              color: "rgba(255,255,255,0.45)",
+              fontWeight: 700
+            }}>
+              Speaker
+            </div>
+            <div style={{
+              fontSize: "20px",
+              fontWeight: 700,
+              color: "rgba(255,255,255,0.95)",
+              lineHeight: 1.2
+            }}>
+              {data.into_speaker.name}
+            </div>
+            <div style={{
+              fontSize: "14px",
+              color: "rgba(255,255,255,0.65)",
+              fontWeight: 500
+            }}>
+              {data.into_speaker.designation}
+            </div>
+          </div>
+        </div>
+      )}
+
       <button onClick={onStart} style={{
         marginTop: "16px", padding: "16px 48px", borderRadius: "100px",
         background: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
@@ -205,12 +251,13 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
   const slideRight = (visible: boolean) => ({
     opacity: visible ? 1 : 0,
     transform: visible ? "translateX(0)" : "translateX(-20px)",
-    transition: "opacity 0.38s ease, transform 0.38s cubic-bezier(0.4,0,0,0.2,1)",
+    transition: "opacity 0.6s ease, transform 0.62s cubic-bezier(0.22,1,0.36,1), filter 0.62s cubic-bezier(0.22,1,0.36,1)",
+    filter: visible ? "blur(0px)" : "blur(4px)",
     pointerEvents: visible ? "auto" : "none" as any
   });
 
   return (
-    <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "32px 52px 28px", gap: "18px", overflowY: "auto" }}>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "38px 64px 34px", gap: "20px", overflowY: "auto" }}>
       <div>
         <h2 style={{
           margin: 0, fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 800,
@@ -251,14 +298,15 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
         {(slide.points || []).map((point, i) => (
           <div key={i} style={{
             display: "flex", gap: "12px", alignItems: "flex-start",
-            ...slideRight(shown("point", i))
+            ...slideRight(shown("point", i)),
+            transitionDelay: shown("point", i) ? `${i * 90}ms` : "0ms"
           }}>
             <div style={{
               width: "6px", height: "6px", borderRadius: "50%", background: color,
               flexShrink: 0, marginTop: "8px", boxShadow: `0 0 8px ${color}60`
             }} />
             <p style={{
-              margin: 0, fontSize: "clamp(13px, 1.6vw, 15px)",
+              margin: 0, fontSize: "clamp(16px, 1.92vw, 18px)",
               color: "rgba(255,255,255,0.78)", lineHeight: 1.65, fontWeight: 400
             }}>
               {point}
@@ -385,6 +433,8 @@ export default function App() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showImageModal, setShowImageModal] = useState(false);
   const [imageSrc, setImageSrc] = useState("");
+  const [imageTitle, setImageTitle] = useState("");
+  const [isBrowserFullscreen, setIsBrowserFullscreen] = useState<boolean>(!!document.fullscreenElement);
 
   const currentSlideData = allSlides[currentSlide];
   const activeColor = currentSlideData?.section_color || "#6C63FF";
@@ -400,9 +450,10 @@ export default function App() {
   const handleOpenImage = useCallback(() => {
     if (currentSlideData?.image) {
       setImageSrc(currentSlideData.image);
+      setImageTitle(currentSlideData.heading || "Full screen");
       setShowImageModal(true);
     }
-  }, [currentSlideData?.image]);
+  }, [currentSlideData?.image, currentSlideData?.heading]);
 
   // Initialize window callback
   useEffect(() => {
@@ -427,10 +478,14 @@ export default function App() {
     if (isTransitioning) return;
     if (revealIndex < totalSteps - 1) {
       setRevealIndex(r => r + 1);
+    } else if (currentSlideData?.linkedinUrl) {
+      setImageSrc("/qr-code.png");
+      setImageTitle("LinkedIn QR Code");
+      setShowImageModal(true);
     } else if (currentSlide < allSlides.length - 1) {
       goTo(currentSlide + 1);
     }
-  }, [isTransitioning, revealIndex, totalSteps, currentSlide, goTo]);
+  }, [isTransitioning, revealIndex, totalSteps, currentSlide, goTo, currentSlideData?.linkedinUrl]);
 
   const stepBack = useCallback(() => {
     if (isTransitioning) return;
@@ -454,23 +509,46 @@ export default function App() {
       if (showTitle) {
         if (["Enter", " ", "ArrowRight", "PageDown"].includes(e.key)) { e.preventDefault(); setShowTitle(false); return; }
       } else {
+        if (showImageModal) {
+          e.preventDefault();
+          setShowImageModal(false);
+          return;
+        }
         if (["ArrowRight", "ArrowDown", " ", "PageDown"].includes(e.key)) { e.preventDefault(); advance(); return; }
         if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); stepBack(); return; }
-        if ((e.key === "Escape" && showImageModal) || (e.key === "." && currentSlideData?.image && !showImageModal)) {
-          if (showImageModal) {
-            e.preventDefault();
-            setShowImageModal(false);
-          } else if (currentSlideData?.image) {
-            e.preventDefault();
-            setImageSrc(currentSlideData.image);
-            setShowImageModal(true);
-          }
+        if (e.key === "." && currentSlideData?.image && !showImageModal) {
+          e.preventDefault();
+          setImageSrc(currentSlideData.image);
+          setImageTitle(currentSlideData.heading || "Full screen");
+          setShowImageModal(true);
         }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [showTitle, advance, stepBack, showImageModal, currentSlideData?.image]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsBrowserFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", onFullscreenChange);
+  }, []);
+
+  const toggleBrowserFullscreen = useCallback(async (e?: React.MouseEvent<HTMLButtonElement>) => {
+    e?.stopPropagation();
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch {
+      // Ignore browser fullscreen API errors (e.g., unsupported or blocked)
+    }
+  }, []);
 
   const jumpToSection = useCallback((sectionIdx: number) => {
     const section = data.sections[sectionIdx];
@@ -487,7 +565,11 @@ export default function App() {
       display: "flex", alignItems: "center",
       justifyContent: "center",
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      overflow: "hidden" as const, position: "relative" as const
+      overflow: "hidden" as const, position: "relative" as const,
+      userSelect: "none" as const,
+      WebkitUserSelect: "none" as const,
+      msUserSelect: "none" as const,
+      WebkitTapHighlightColor: "transparent"
     }}>
       <GlassOrb x="-10%" y="-15%" size="50vw" color={activeColor} opacity={0.12} blur={120} />
       <GlassOrb x="60%" y="50%" size="40vw" color={showTitle ? "#A78BFA" : activeColor} opacity={0.08} blur={100} />
@@ -499,16 +581,51 @@ export default function App() {
         backgroundSize: "60px 60px", pointerEvents: "none" as const
       }} />
 
+      <button
+        onClick={toggleBrowserFullscreen}
+        title={isBrowserFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+        aria-label={isBrowserFullscreen ? "Exit browser fullscreen" : "Enter browser fullscreen"}
+        style={{
+          position: "absolute" as const,
+          top: "18px",
+          right: "18px",
+          zIndex: 1100,
+          width: "40px",
+          height: "40px",
+          borderRadius: "10px",
+          border: "1px solid rgba(255,255,255,0.2)",
+          background: "rgba(255,255,255,0.08)",
+          color: "rgba(255,255,255,0.9)",
+          backdropFilter: "blur(10px)",
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "18px",
+          transition: "all 0.2s ease"
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = "rgba(255,255,255,0.16)";
+          e.currentTarget.style.transform = "scale(1.05)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+          e.currentTarget.style.transform = "scale(1)";
+        }}
+      >
+        {isBrowserFullscreen ? "🡼" : "⛶"}
+      </button>
+
       <ImageModal
         isOpen={showImageModal}
         imageSrc={imageSrc}
         onClose={() => setShowImageModal(false)}
         sectionColor={sectionColor}
-        imageTitle={currentSlideData?.heading}
+        imageTitle={imageTitle || currentSlideData?.heading}
       />
 
       <div style={{
-        width: "min(96vw, 1100px)", height: "min(92vh, 700px)",
+        width: "min(99vw, 1360px)", height: "min(97vh, 860px)",
         borderRadius: "28px", position: "relative", overflow: "hidden",
         background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
         border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(40px) saturate(180%)",

@@ -356,17 +356,14 @@
       "slides": [
         {
           "slide_number": 24,
-          "heading": "The Era of the Architect",
-          "subheading": "The coder writes code. The architect ships products.",
+          "heading": "Thank you",
+          "subheading": "Your time to ask questions, share feedback, and connect.",
           "points": [
             "You came here as a developer. You're leaving as an architect.",
-            "The tools exist. The frameworks are mature. The only barrier is your willingness to adapt.",
-            "Ship faster. Think bigger. Stay curious. Never stop debugging manually.",
-            "Connect with me on LinkedIn for ongoing AI-native development insights and resources.",
-            "Scan the QR code to access the full slide deck, resource links, and template library."
+            "The tools exist. The frameworks are mature. The only barrier is your willingness to adapt."
           ],
           "callout": "The best time to start building with AI agents was last year. The second best time is right now.",
-          "linkedinUrl": "https://linkedin.com/in/your-profile"
+         "linkedinUrl": "https://www.linkedin.com/in/vishnuraj910/"
         }
       ]
     }

@@ -22,6 +22,7 @@ export interface Slide {
 export interface Stat {
   value: string;
   label: string;
+  source?: string;
 }
 
 export interface PresentationData {

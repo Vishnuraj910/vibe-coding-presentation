@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { AllSlide, PresentationData } from "./types/slides";
-import data from "../public/data/slides.json";
+import data from "./data/slides.json";
 import { useTheme } from "./context/ThemeContext.tsx";
 import ThemeToggle from "./components/ThemeToggle";
 
@@ -318,18 +318,32 @@ function SlideContent({ slide, revealIndex, onImageClick, isDark, themeColors }:
 
       {slide.stat && (
         <div style={{
-          display: "flex", alignItems: "center", gap: "20px",
+          display: "flex", flexDirection: "column", gap: "4px",
           padding: "16px 24px", borderRadius: "16px",
           background: `linear-gradient(135deg, ${color}20, ${color}08)`,
           border: `1px solid ${color}35`, backdropFilter: "blur(20px)",
+          marginTop: (slide.points || []).length === 0 ? "80px" : "0",
           ...fadeUp(shown("stat"))
         }}>
-          <div style={{ fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 900, color, lineHeight: 1, flexShrink: 0 }}>
-            {slide.stat.value}
+          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+            <div style={{ fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 900, color, lineHeight: 1, flexShrink: 0, maxWidth: "70%", wordWrap: "break-word" as const }}>
+              <span dangerouslySetInnerHTML={{ __html: slide.stat.value }} />
+            </div>
+            <div style={{ fontSize: "14px", color: themeColors.textSubtle, lineHeight: 1.4 }}>
+              <span dangerouslySetInnerHTML={{ __html: slide.stat.label }} />
+            </div>
           </div>
-          <div style={{ fontSize: "14px", color: themeColors.textSubtle, lineHeight: 1.4 }}>
-            {slide.stat.label}
-          </div>
+          {slide.stat.source && (
+            <div style={{
+              fontSize: "11px",
+              color: themeColors.textMuted,
+              opacity: 0.6,
+              marginLeft: "auto",
+              fontStyle: "italic"
+            }}>
+              Source: {slide.stat.source}
+            </div>
+          )}
         </div>
       )}
 
@@ -348,9 +362,9 @@ function SlideContent({ slide, revealIndex, onImageClick, isDark, themeColors }:
               margin: 0, fontSize: "clamp(16px, 1.92vw, 18px)",
               color: themeColors.textSubtle, 
               lineHeight: 1.65, fontWeight: 400
-            }}>
-              {point}
-            </p>
+            }}
+              dangerouslySetInnerHTML={{ __html: point }}
+            />
           </div>
         ))}
       </div>
@@ -365,7 +379,7 @@ function SlideContent({ slide, revealIndex, onImageClick, isDark, themeColors }:
         }}>
           <p style={{ margin: 0, fontSize: "clamp(12px, 1.5vw, 14px)", color: themeColors.textMuted, lineHeight: 1.6, fontStyle: "italic" }}>
             <span style={{ color, fontWeight: 700, fontStyle: "normal" }}>→ </span>
-            {slide.callout}
+            <span dangerouslySetInnerHTML={{ __html: slide.callout }} />
           </p>
         </div>
       )}
@@ -544,7 +558,7 @@ export default function App() {
     if (revealIndex < totalSteps - 1) {
       setRevealIndex(r => r + 1);
     } else if (currentSlideData?.linkedinUrl) {
-      setImageSrc("/qr-code.png");
+      setImageSrc("src/assets/qr-code.png");
       setImageTitle("LinkedIn QR Code");
       setShowImageModal(true);
     } else if (currentSlide < allSlides.length - 1) {

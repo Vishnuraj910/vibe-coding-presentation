@@ -1,60 +1,85 @@
 import { useState, useEffect, useCallback } from "react";
+import type { AllSlide, PresentationData } from "./types/slides";
 import data from "../public/data/slides.json";
+
 // Flatten slides with section metadata
-const allSlides = [];
+const allSlides: AllSlide[] = [];
 data.sections.forEach((section) => {
   section.slides.forEach((slide) => {
     allSlides.push({ ...slide, section_name: section.section_name, section_icon: section.section_icon, section_color: section.section_color });
   });
 });
 
-// Build the ordered reveal steps for a slide
-// stat → points (one by one) → callout → linkedinUrl
-function getRevealSteps(slide) {
-  const steps = [];
+type RevealStep = { type: "stat" | "point" | "callout"; index?: number };
+
+function getRevealSteps(slide: AllSlide): RevealStep[] {
+  const steps: RevealStep[] = [];
   if (slide.stat) steps.push({ type: "stat" });
   (slide.points || []).forEach((_, i) => steps.push({ type: "point", index: i }));
   if (slide.callout) steps.push({ type: "callout" });
-  if (slide.linkedinUrl) steps.push({ type: "linkedin" });
+  if (slide.linkedinUrl) steps.push({ type: "point" });
   return steps;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+interface GlassOrbProps {
+  x: string | number;
+  y: string | number;
+  size: string;
+  color: string;
+  opacity?: number;
+  blur?: number;
+}
 
-function GlassOrb({ x, y, size, color, opacity = 0.15, blur = 80 }) {
+function GlassOrb({ x, y, size, color, opacity = 0.15, blur = 80 }: GlassOrbProps) {
   return (
     <div style={{
-      position: "absolute", left: x, top: y, width: size, height: size,
-      borderRadius: "50%", background: color, opacity,
-      filter: `blur(${blur}px)`, pointerEvents: "none", transition: "all 1.5s ease"
+      position: "absolute" as const, left: x, top: y, width: size, height: size,
+      borderRadius: "50%", background: color, opacity: opacity ?? 0.15,
+      filter: `blur(${blur ?? 80}px)`, pointerEvents: "none" as const, transition: "all 1.5s ease"
     }} />
   );
 }
 
-function ProgressBar({ current, total, color }) {
+interface ProgressBarProps {
+  current: number;
+  total: number;
+  color: string;
+}
+
+function ProgressBar({ current, total, color }: ProgressBarProps) {
   return (
-    <div style={{ height: "3px", background: "rgba(255,255,255,0.1)", borderRadius: "2px", overflow: "hidden" }}>
+    <div style={{ height: "3px", background: "rgba(255,255,255,0.1)", borderRadius: "2px" as const, overflow: "hidden" }}>
       <div style={{
         height: "100%", width: `${((current + 1) / total) * 100}%`,
         background: `linear-gradient(90deg, ${color}, ${color}cc)`,
-        borderRadius: "2px", transition: "width 0.5s cubic-bezier(0.4,0,0.2,1)",
+        borderRadius: "2px", transition: "width 0.5s cubic-bezier(0.4,0,0,0.2,1)",
         boxShadow: `0 0 8px ${color}80`
       }} />
     </div>
   );
 }
 
-function SectionNav({ sections, currentSection, onSelect }) {
+interface SectionNavProps {
+  sections: PresentationData["sections"];
+  currentSection: number;
+  onSelect: (idx: number) => void;
+}
+
+function SectionNav({ sections, currentSection, onSelect }: SectionNavProps) {
   return (
     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center" }}>
       {sections.map((sec, i) => (
-        <button key={i} onClick={(e) => { e.stopPropagation(); onSelect(i); }} style={{
-          padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: 600,
-          border: `1px solid ${currentSection === i ? sec.section_color : "rgba(255,255,255,0.15)"}`,
-          background: currentSection === i ? `${sec.section_color}25` : "rgba(255,255,255,0.05)",
-          color: currentSection === i ? sec.section_color : "rgba(255,255,255,0.5)",
-          cursor: "pointer", transition: "all 0.3s ease", letterSpacing: "0.03em", backdropFilter: "blur(10px)"
-        }}>
+        <button
+          key={i}
+          onClick={(e) => { e.stopPropagation(); onSelect(i); }}
+          style={{
+            padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: 600,
+            border: `1px solid ${currentSection === i ? sec.section_color : "rgba(255,255,255,0.15)"}`,
+            background: currentSection === i ? `${sec.section_color}25` : "rgba(255,255,255,0.05)",
+            color: currentSection === i ? sec.section_color : "rgba(255,255,255,0.5)",
+            cursor: "pointer", transition: "all 0.3s ease", letterSpacing: "0.03em", backdropFilter: "blur(10px)"
+          }}
+        >
           {sec.section_icon} {sec.section_name}
         </button>
       ))}
@@ -62,22 +87,27 @@ function SectionNav({ sections, currentSection, onSelect }) {
   );
 }
 
-// ─── Title Slide ──────────────────────────────────────────────────────────────
+interface TitleSlideProps {
+  data: PresentationData;
+  onStart: () => void;
+}
 
-function TitleSlide({ data, onStart }) {
+function TitleSlide({ data, onStart }: TitleSlideProps) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), 100); return () => clearTimeout(t); }, []);
   return (
     <div style={{
       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-      height: "100%", textAlign: "center", padding: "60px 40px", gap: "28px"
+      height: "100%", textAlign: "center" as const, padding: "60px 40px", gap: "28px"
     }}>
       <div style={{
         opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(30px)",
-        transition: "all 0.8s cubic-bezier(0.4,0,0.2,1)",
+        transition: "all 0.8s cubic-bezier(0.4,0,0,0.2,1)",
         display: "flex", flexDirection: "column", alignItems: "center", gap: "8px"
       }}>
-        <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase", marginBottom: "8px" }}>
+        <div style={{
+          fontSize: "11px", fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, marginBottom: "8px"
+        }}>
           {data.version}
         </div>
         <h1 style={{
@@ -85,26 +115,40 @@ function TitleSlide({ data, onStart }) {
           background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           lineHeight: 1.05, letterSpacing: "-0.03em"
-        }}>{data.presentation_title}</h1>
-        <div style={{ fontSize: "clamp(20px, 3.5vw, 36px)", fontWeight: 300, color: "rgba(255,255,255,0.6)", letterSpacing: "0.01em" }}>
+        }}>
+          {data.presentation_title}
+        </h1>
+        <div style={{
+          fontSize: "clamp(20px, 3.5vw, 36px)", fontWeight: 300,
+          color: "rgba(255,255,255,0.6)", letterSpacing: "0.01em"
+        }}>
           {data.presentation_subtitle}
         </div>
       </div>
 
-      <div style={{ opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)", transition: "all 0.8s cubic-bezier(0.4,0,0.2,1) 0.3s" }}>
+      <div style={{
+        opacity: visible ? 1 : 0, transform: visible ? "translateY(0)" : "translateY(20px)",
+        transition: "all 0.8s cubic-bezier(0.4,0,0,0.2,1) 0.3s"
+      }}>
         <div style={{
           padding: "12px 28px", borderRadius: "100px",
           background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)",
           backdropFilter: "blur(20px)", fontSize: "14px", color: "rgba(255,255,255,0.7)", fontStyle: "italic", letterSpacing: "0.02em"
-        }}>"{data.tagline}"</div>
+        }}>
+          "{data.tagline}"
+        </div>
       </div>
 
-      <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center", opacity: visible ? 1 : 0, transition: "all 0.8s ease 0.5s" }}>
+      <div style={{
+        display: "flex", gap: "12px", flexWrap: "wrap", justifyContent: "center",
+        opacity: visible ? 1 : 0, transition: "all 0.8s ease 0.5s"
+      }}>
         {data.sections.map((s, i) => (
           <div key={i} style={{
             display: "flex", alignItems: "center", gap: "6px", padding: "6px 14px",
-            borderRadius: "20px", background: `${s.section_color}20`, border: `1px solid ${s.section_color}40`,
-            fontSize: "12px", color: s.section_color, fontWeight: 600
+            borderRadius: "20px", background: `${s.section_color}20`,
+            border: `1px solid ${s.section_color}40`, fontSize: "12px",
+            color: s.section_color, fontWeight: 600
           }}>
             {s.section_icon} {s.section_name}
             <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>{s.slides.length}</span>
@@ -118,76 +162,66 @@ function TitleSlide({ data, onStart }) {
         border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: "16px", fontWeight: 600,
         cursor: "pointer", backdropFilter: "blur(20px)", letterSpacing: "0.05em",
         transition: "all 0.3s ease", opacity: visible ? 1 : 0,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.3)", textTransform: "uppercase"
+        boxShadow: "0 8px 32px rgba(0,0,0,0.3)", textTransform: "uppercase" as const
       }}
-        onMouseEnter={e => { e.target.style.background = "rgba(255,255,255,0.2)"; e.target.style.transform = "scale(1.03)"; }}
-        onMouseLeave={e => { e.target.style.background = "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))"; e.target.style.transform = "scale(1)"; }}
-      >Begin →</button>
+        onMouseEnter={(e) => { const btn = e.currentTarget as HTMLButtonElement; btn.style.background = "rgba(255,255,255,0.2)"; btn.style.transform = "scale(1.03)"; }}
+        onMouseLeave={(e) => { const btn = e.currentTarget as HTMLButtonElement; btn.style.background = "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))"; btn.style.transform = "scale(1)"; }}
+      >
+        Begin →
+      </button>
     </div>
   );
 }
 
-// ─── Slide Content ────────────────────────────────────────────────────────────
-// revealIndex: -1 = only heading + subheading shown
-// 0, 1, 2...  = reveal steps shown up to and including that index
-function SlideContent({ slide, revealIndex }) {
+interface SlideContentProps {
+  slide: AllSlide;
+  revealIndex: number;
+}
+
+function SlideContent({ slide, revealIndex }: SlideContentProps) {
   const color = slide.section_color;
   const steps = getRevealSteps(slide);
 
-  // Is step with given type (and optional point index) visible yet?
-  const shown = (type, idx) => {
+  const shown = (type: "stat" | "point" | "callout", idx?: number) => {
     const si = steps.findIndex(s => s.type === type && (idx === undefined || s.index === idx));
     return si !== -1 && revealIndex >= si;
   };
 
-  const fadeUp = (visible) => ({
+  const fadeUp = (visible: boolean) => ({
     opacity: visible ? 1 : 0,
     transform: visible ? "translateY(0)" : "translateY(14px)",
-    transition: "opacity 0.4s ease, transform 0.42s cubic-bezier(0.4,0,0.2,1)",
+    transition: "opacity 0.4s ease, transform 0.42s cubic-bezier(0.4,0,0,0.2,1)",
     pointerEvents: visible ? "auto" : "none"
   });
 
-  const slideRight = (visible) => ({
+  const slideRight = (visible: boolean) => ({
     opacity: visible ? 1 : 0,
     transform: visible ? "translateX(0)" : "translateX(-20px)",
-    transition: "opacity 0.38s ease, transform 0.38s cubic-bezier(0.4,0,0.2,1)",
+    transition: "opacity 0.38s ease, transform 0.38s cubic-bezier(0.4,0,0,0.2,1)",
     pointerEvents: visible ? "auto" : "none"
   });
 
   return (
     <div style={{ height: "100%", display: "flex", flexDirection: "column", padding: "32px 52px 28px", gap: "18px", overflowY: "auto" }}>
-
-      {/* Section badge — always visible */}
-      {/* <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <div style={{
-          padding: "4px 14px", borderRadius: "20px", fontSize: "11px", fontWeight: 700,
-          background: `${color}20`, border: `1px solid ${color}40`, color,
-          letterSpacing: "0.1em", textTransform: "uppercase"
-        }}>
-          {slide.section_icon} {slide.section_name}
-        </div>
-        <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", fontWeight: 500 }}>
-          Slide {slide.slide_number}
-        </div>
-      </div> */}
-
-      {/* Heading + subheading — ALWAYS visible (initial state) */}
       <div>
         <h2 style={{
           margin: 0, fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 800,
           background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.75) 100%)",
           WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
           lineHeight: 1.1, letterSpacing: "-0.02em"
-        }}>{slide.heading}</h2>
+        }}>
+          {slide.heading}
+        </h2>
         {slide.subheading && (
           <p style={{
             margin: "8px 0 0", fontSize: "clamp(13px, 1.8vw, 17px)",
             color: "rgba(255,255,255,0.45)", fontWeight: 400, fontStyle: "italic", lineHeight: 1.4
-          }}>{slide.subheading}</p>
+          }}>
+            {slide.subheading}
+          </p>
         )}
       </div>
 
-      {/* Stat card — appears on its reveal step */}
       {slide.stat && (
         <div style={{
           display: "flex", alignItems: "center", gap: "20px",
@@ -205,7 +239,6 @@ function SlideContent({ slide, revealIndex }) {
         </div>
       )}
 
-      {/* Points — each revealed one by one */}
       <div style={{ display: "flex", flexDirection: "column", gap: "10px", flex: 1 }}>
         {(slide.points || []).map((point, i) => (
           <div key={i} style={{
@@ -219,17 +252,18 @@ function SlideContent({ slide, revealIndex }) {
             <p style={{
               margin: 0, fontSize: "clamp(13px, 1.6vw, 15px)",
               color: "rgba(255,255,255,0.78)", lineHeight: 1.65, fontWeight: 400
-            }}>{point}</p>
+            }}>
+              {point}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Callout — appears on its reveal step */}
       {slide.callout && (
         <div style={{
           padding: "15px 20px", borderRadius: "12px",
           background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
-          borderLeft: `3px solid ${color}`, backdropFilter: "blur(20px)",
+          borderLeft: `3px solid ${color}`, backdropFilter: "blur(20px)" as const,
           ...fadeUp(shown("callout"))
         }}>
           <p style={{ margin: 0, fontSize: "clamp(12px, 1.5vw, 14px)", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, fontStyle: "italic" }}>
@@ -239,13 +273,12 @@ function SlideContent({ slide, revealIndex }) {
         </div>
       )}
 
-      {/* LinkedIn card — appears on its reveal step */}
       {slide.linkedinUrl && (
         <div style={{
           display: "flex", alignItems: "center", gap: "12px",
           padding: "12px 20px", borderRadius: "12px",
           background: "rgba(10,102,194,0.15)", border: "1px solid rgba(10,102,194,0.3)",
-          ...fadeUp(shown("linkedin"))
+          ...fadeUp(shown("point"))
         }}>
           <span style={{ fontSize: "18px" }}>💼</span>
           <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)" }}>Connect on LinkedIn</span>
@@ -255,8 +288,6 @@ function SlideContent({ slide, revealIndex }) {
     </div>
   );
 }
-
-// ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
   const [showTitle, setShowTitle] = useState(true);
@@ -275,8 +306,7 @@ export default function App() {
     s.slides.some(sl => sl.slide_number === currentSlideData?.slide_number)
   );
 
-  // Hard jump to a specific slide index (resets reveal to -1)
-  const goTo = useCallback((idx) => {
+  const goTo = useCallback((idx: number) => {
     if (isTransitioning || idx < 0 || idx >= allSlides.length) return;
     setDirection(idx > currentSlide ? 1 : -1);
     setIsTransitioning(true);
@@ -287,7 +317,6 @@ export default function App() {
     }, 280);
   }, [currentSlide, isTransitioning]);
 
-  // ADVANCE: reveal next element → when done, advance to next slide
   const advance = useCallback(() => {
     if (isTransitioning) return;
     if (revealIndex < totalSteps - 1) {
@@ -297,7 +326,6 @@ export default function App() {
     }
   }, [isTransitioning, revealIndex, totalSteps, currentSlide, goTo]);
 
-  // STEP BACK: un-reveal last element → when at -1, go to previous slide (fully revealed)
   const stepBack = useCallback(() => {
     if (isTransitioning) return;
     if (revealIndex > -1) {
@@ -309,31 +337,30 @@ export default function App() {
         const prevIdx = currentSlide - 1;
         const prevSteps = getRevealSteps(allSlides[prevIdx]);
         setCurrentSlide(prevIdx);
-        setRevealIndex(prevSteps.length - 1); // land fully revealed
+        setRevealIndex(prevSteps.length - 1);
         setIsTransitioning(false);
       }, 280);
     }
   }, [isTransitioning, revealIndex, currentSlide]);
 
-  // Keyboard / clicker support
   useEffect(() => {
-    const handler = (e) => {
+    const handler = (e: KeyboardEvent) => {
       if (showTitle) {
-        if (["Enter", " ", "ArrowRight", "PageDown"].includes(e.key)) { e.preventDefault(); setShowTitle(false); }
-        return;
+        if (["Enter", " ", "ArrowRight", "PageDown"].includes(e.key)) { e.preventDefault(); setShowTitle(false); return; }
+      } else {
+        if (["ArrowRight", "ArrowDown", " ", "PageDown"].includes(e.key)) { e.preventDefault(); advance(); return; }
+        if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); stepBack(); return; }
       }
-      if (["ArrowRight", "ArrowDown", " ", "PageDown"].includes(e.key)) { e.preventDefault(); advance(); }
-      if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); stepBack(); }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [showTitle, advance, stepBack]);
 
-  const jumpToSection = (sectionIdx) => {
+  const jumpToSection = useCallback((sectionIdx: number) => {
     const section = data.sections[sectionIdx];
     const firstIdx = allSlides.findIndex(s => s.section_name === section.section_name);
     if (firstIdx >= 0) { setShowTitle(false); goTo(firstIdx); }
-  };
+  }, [goTo]);
 
   const isAtStart = currentSlide === 0 && revealIndex === -1;
   const isAtEnd = currentSlide === allSlides.length - 1 && fullyRevealed;
@@ -341,43 +368,39 @@ export default function App() {
   return (
     <div style={{
       width: "100vw", height: "100vh", background: "#080B14",
-      display: "flex", alignItems: "center", justifyContent: "center",
+      display: "flex", alignItems: "center",
+      justifyContent: "center",
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      overflow: "hidden", position: "relative"
+      overflow: "hidden" as const, position: "relative" as const
     }}>
-      {/* Background glow orbs */}
       <GlassOrb x="-10%" y="-15%" size="50vw" color={activeColor} opacity={0.12} blur={120} />
       <GlassOrb x="60%" y="50%" size="40vw" color={showTitle ? "#A78BFA" : activeColor} opacity={0.08} blur={100} />
       <GlassOrb x="20%" y="70%" size="30vw" color="#00D4AA" opacity={0.06} blur={80} />
 
-      {/* Subtle grid */}
       <div style={{
-        position: "absolute", inset: 0, opacity: 0.025,
+        position: "absolute" as const, inset: 0, opacity: 0.025,
         backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-        backgroundSize: "60px 60px", pointerEvents: "none"
+        backgroundSize: "60px 60px", pointerEvents: "none" as const
       }} />
 
-      {/* Main glass card */}
       <div style={{
         width: "min(96vw, 1100px)", height: "min(92vh, 700px)",
         borderRadius: "28px", position: "relative", overflow: "hidden",
         background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
         border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(40px) saturate(180%)",
         boxShadow: `0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 80px ${activeColor}15`,
-        transition: "box-shadow 1s ease", display: "flex", flexDirection: "column"
+        transition: "box-shadow 1s ease", display: "flex", flexDirection: "column" as const
       }}>
-        {/* Glass shine */}
         <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: "50%",
+          position: "absolute" as const, top: 0, left: 0, right: 0, height: "50%",
           background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)",
-          borderRadius: "28px 28px 0 0", pointerEvents: "none"
+          borderRadius: "28px 28px 0 0", pointerEvents: "none" as const
         }} />
 
         {showTitle ? (
           <TitleSlide data={data} onStart={() => setShowTitle(false)} />
         ) : (
           <>
-            {/* ── Top bar ── */}
             <div style={{
               padding: "14px 24px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)",
               display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0
@@ -385,18 +408,17 @@ export default function App() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <button onClick={(e) => { e.stopPropagation(); setShowTitle(true); }} style={{
                   background: "none", border: "none", color: "rgba(255,255,255,0.3)",
-                  fontSize: "12px", cursor: "pointer", padding: 0, letterSpacing: "0.05em", transition: "color 0.2s"
+                  fontSize: "12px", cursor: "pointer" as const, padding: 0, letterSpacing: "0.05em" as const
                 }}
-                  onMouseEnter={e => e.target.style.color = "rgba(255,255,255,0.7)"}
-                  onMouseLeave={e => e.target.style.color = "rgba(255,255,255,0.3)"}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
                 >← HOME</button>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-                  {/* Per-slide step indicator dots */}
                   <div style={{ display: "flex", gap: "4px", alignItems: "center" }}>
                     {steps.map((_, i) => (
                       <div key={i} style={{
-                        width: i <= revealIndex ? "14px" : "5px", height: "5px",
+                        width: i <= revealIndex ? "14px" : "5px", height: "5px" as string,
                         borderRadius: "3px", transition: "all 0.3s ease",
                         background: i <= revealIndex ? activeColor : "rgba(255,255,255,0.15)",
                         boxShadow: i <= revealIndex ? `0 0 5px ${activeColor}60` : "none"
@@ -413,29 +435,23 @@ export default function App() {
               <ProgressBar current={currentSlide} total={allSlides.length} color={activeColor} />
             </div>
 
-            {/* ── Clickable slide area ── */}
-            <div
-              onClick={advance}
-              style={{
-                flex: 1, overflow: "hidden", position: "relative",
-                cursor: isAtEnd ? "default" : "pointer",
-                opacity: isTransitioning ? 0 : 1,
-                transform: isTransitioning ? `translateX(${direction * 28}px)` : "translateX(0)",
-                transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4,0,0.2,1)"
-              }}
-            >
+            <div onClick={advance} style={{
+              flex: 1, overflow: "hidden", position: "relative",
+              cursor: isAtEnd ? "default" : "pointer" as const,
+              opacity: isTransitioning ? 0 : 1,
+              transform: isTransitioning ? `translateX(${direction * 28}px)` : "translateX(0)",
+              transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4,0,0,0.2,1)"
+            }}>
               <SlideContent slide={currentSlideData} revealIndex={revealIndex} />
 
-              {/* Subtle click-to-reveal hint */}
               {!isAtEnd && !isTransitioning && (
                 <div style={{
-                  position: "absolute", bottom: "14px", right: "20px",
+                  position: "absolute" as const, top: "14px", right: "20px",
                   display: "flex", alignItems: "center", gap: "6px",
                   padding: "5px 12px", borderRadius: "20px",
-                  background: "rgba(255,255,255,0.04)", border: `1px solid ${activeColor}25`,
-                  pointerEvents: "none"
+                  background: "rgba(255,255,255,0.04)", border: `1px solid ${activeColor}25`
                 }}>
-                  <div style={{ width: "5px", height: "5px", borderRadius: "50%", background: activeColor, opacity: 0.7 }} />
+                  <div style={{ width: "5px", height: "5px" as string, borderRadius: "50%", background: activeColor, opacity: 0.7 }} />
                   <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", letterSpacing: "0.05em" }}>
                     {fullyRevealed
                       ? "click or → for next slide"
@@ -445,12 +461,10 @@ export default function App() {
               )}
             </div>
 
-            {/* ── Bottom nav ── */}
             <div style={{
               padding: "11px 24px", borderTop: "1px solid rgba(255,255,255,0.07)",
               display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0
             }}>
-              {/* Back button */}
               <button
                 onClick={(e) => { e.stopPropagation(); stepBack(); }}
                 disabled={isAtStart}
@@ -459,30 +473,28 @@ export default function App() {
                   background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
                   color: isAtStart ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
                   fontSize: "13px", fontWeight: 600,
-                  cursor: isAtStart ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease", letterSpacing: "0.03em", backdropFilter: "blur(10px)"
+                  cursor: isAtStart ? "not-allowed" : "pointer" as const,
+                  transition: "all 0.2s ease", letterSpacing: "0.03em" as const, backdropFilter: "blur(10px)"
                 }}
-                onMouseEnter={e => { if (!isAtStart) e.target.style.background = "rgba(255,255,255,0.12)"; }}
-                onMouseLeave={e => e.target.style.background = "rgba(255,255,255,0.06)"}
+                onMouseEnter={(e) => { if (!isAtStart) e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
+                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
               >← Back</button>
 
-              {/* Slide dots (click to jump to slide) */}
               <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
                 {allSlides.map((_, i) => {
                   const sec = data.sections.find(s => s.slides.some(sl => sl.slide_number === allSlides[i]?.slide_number));
                   const isCur = i === currentSlide;
                   return (
                     <button key={i} onClick={(e) => { e.stopPropagation(); goTo(i); }} style={{
-                      width: isCur ? "20px" : "5px", height: "5px", borderRadius: "3px", border: "none",
+                      width: isCur ? "20px" : "5px" as string, height: "5px" as string, borderRadius: "3px", border: "none" as const,
                       background: isCur ? (sec?.section_color || "#fff") : "rgba(255,255,255,0.15)",
-                      cursor: "pointer", transition: "all 0.3s ease", padding: 0,
+                      cursor: "pointer" as const, transition: "all 0.3s ease", padding: 0,
                       boxShadow: isCur ? `0 0 6px ${sec?.section_color}80` : "none"
                     }} />
                   );
                 })}
               </div>
 
-              {/* Next / Reveal button */}
               <button
                 onClick={(e) => { e.stopPropagation(); advance(); }}
                 disabled={isAtEnd}
@@ -495,10 +507,10 @@ export default function App() {
                   color: isAtEnd ? "rgba(255,255,255,0.2)" : "#fff",
                   fontSize: "13px", fontWeight: 600,
                   cursor: isAtEnd ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease", letterSpacing: "0.03em", backdropFilter: "blur(10px)"
+                  transition: "all 0.2s ease", letterSpacing: "0.03em" as const, backdropFilter: "blur(10px)"
                 }}
-                onMouseEnter={e => { if (!isAtEnd) e.target.style.transform = "scale(1.04)"; }}
-                onMouseLeave={e => e.target.style.transform = "scale(1)"}
+                onMouseEnter={(e) => { if (!isAtEnd) e.currentTarget.style.transform = "scale(1.04)"; }}
+                onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
               >
                 {fullyRevealed ? "Next →" : "Reveal →"}
               </button>
@@ -507,11 +519,10 @@ export default function App() {
         )}
       </div>
 
-      {/* Bottom hint */}
       {!showTitle && (
         <div style={{
-          position: "absolute", bottom: "12px", left: "50%", transform: "translateX(-50%)",
-          fontSize: "10px", color: "rgba(255,255,255,0.16)", letterSpacing: "0.08em", pointerEvents: "none", whiteSpace: "nowrap"
+          position: "absolute" as const, bottom: "12px", left: "50%", transform: "translateX(-50%)",
+          fontSize: "10px", color: "rgba(255,255,255,0.16)", letterSpacing: "0.08em", pointerEvents: "none" as const, whiteSpace: "nowrap" as const
         }}>
           SPACE / → / CLICK SLIDE — REVEAL · ← / BACKSPACE — STEP BACK
         </div>

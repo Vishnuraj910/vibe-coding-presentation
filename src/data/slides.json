@@ -87,7 +87,7 @@
           "slide_number": 6,
           "heading": "Everyone is using AI Agents",
           "subheading": "The GAP in hype vs. reality is closing fast — don't be the last to adopt.",
-          "image": "/src/assets/ai_adoption.jpg",
+          "image": "/assets/ai_adoption.jpg",
           "callout": "You are not behind the curve. The curve is behind you. The question is how fast you can catch up."
         }
       ]
@@ -387,11 +387,11 @@
     "cards": [
       {
         "title": "Slides",
-        "image": "src/assets/qr-slides.png"
+        "image": "/assets/qr-slides.png"
       },
       {
         "title": "LinkedIn",
-        "image": "src/assets/qr-code.png"
+        "image": "/assets/qr-code.png"
       }]
       
 

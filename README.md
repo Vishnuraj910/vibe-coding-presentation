@@ -37,6 +37,56 @@ npm run preview
 
 The app will be available at `http://localhost:5173`
 
+## ☁️ Deploy to Cloudflare
+
+This project is already configured for Cloudflare Workers static assets deployment via `wrangler.jsonc`.
+
+### 1) One-time setup
+
+```bash
+# Install dependencies
+npm install
+
+# Login to Cloudflare
+npx wrangler login
+```
+
+### 2) Build locally
+
+```bash
+npm run build
+```
+
+### 3) Deploy
+
+```bash
+npm run deploy
+```
+
+This runs `wrangler deploy` and uploads your built `dist` assets.
+
+### 4) Optional: preview locally with Cloudflare runtime
+
+```bash
+npm run preview
+```
+
+### 5) Git-based Cloudflare Pages deployment (alternative)
+
+If you prefer deploying through Cloudflare Pages UI using your GitHub repo:
+
+- Framework preset: **Vite**
+- Build command: `npm run build`
+- Build output directory: `dist`
+- Node version: `20`
+
+`_redirects` is included for SPA fallback (`/* /index.html 200`).
+
+### Notes
+
+- Static security headers are provided in `_headers`.
+- `wrangler.jsonc` includes SPA not-found handling via `assets.not_found_handling = "single-page-application"`.
+
 ## 🎹 Keyboard Shortcuts
 
 | Key | Action |

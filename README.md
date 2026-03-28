@@ -41,6 +41,14 @@ The app will be available at `http://localhost:5173`
 
 This project is already configured for Cloudflare Workers static assets deployment via `wrangler.jsonc`.
 
+### ✅ Latest deployment status
+
+- Successfully deployed with Wrangler
+- Live URL: `https://vibe-coding-presentation.vishnuraj910.workers.dev`
+- Current Version ID: `aebbef2d-d4ac-4416-b9a8-fd533fc16764`
+
+You can redeploy anytime with `npm run deploy`.
+
 ### 1) One-time setup
 
 ```bash
@@ -65,6 +73,8 @@ npm run deploy
 
 This runs `wrangler deploy` and uploads your built `dist` assets.
 
+On first deploy, Wrangler opens a browser for OAuth login and then continues automatically.
+
 ### 4) Optional: preview locally with Cloudflare runtime
 
 ```bash
@@ -86,6 +96,8 @@ If you prefer deploying through Cloudflare Pages UI using your GitHub repo:
 
 - Static security headers are provided in `_headers`.
 - `wrangler.jsonc` includes SPA not-found handling via `assets.not_found_handling = "single-page-application"`.
+- `_redirects` is included for SPA routing fallback.
+- Vite Cloudflare plugin is enabled in `vite.config.js` (`@cloudflare/vite-plugin`).
 
 ## 🎹 Keyboard Shortcuts
 

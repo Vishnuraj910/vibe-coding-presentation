@@ -16,7 +16,6 @@
           "points": [
             "The industry has crossed a threshold — AI agents now write code faster than humans type.",
             "The shift is from 'writing lines' to 'steering intent' — you are the pilot, not the engine.",
-            "Staying manual in 2026 is like hand-cranking your car. The technology exists. Use it.",
             "This isn't about replacing developers — it's about 10x-ing what one developer can ship."
           ],
           "stat": {
@@ -58,13 +57,8 @@
           "slide_number": 4,
           "heading": "Choosing Your Fuel",
           "subheading": "Model selection is economic engineering, not brand loyalty.",
-          "points": [
-            "High-Reasoning Models (Opus, Pro, o3): Architecting, debugging deep logic, security audits.",
-            "High-Speed Models (Flash, Haiku, Sonnet): Boilerplate, CRUD, repetitive pattern generation.",
-            "Cost vs. Quality: Using a $15/M token model for a 3-line function is wasteful engineering.",
-            "Cascade strategy: Planner model (expensive) → Executor model (cheap) → Reviewer (medium).",
-            "Always benchmark: run both models on the same task and measure output quality vs. cost ratio."
-          ],
+          "image": "data/ai_adoption.jpg",
+          "imageSize": "800x600",
           "callout": "The right model for the right task. Economic engineering is a developer skill now."
         }
       ]
@@ -356,7 +350,7 @@
             "Scan the QR code to access the full slide deck, resource links, and template library."
           ],
           "callout": "The best time to start building with AI agents was last year. The second best time is right now.",
-          "linkedinUrl": "https://linkedin.com/in/your-profile"
+          "linkedinUrl": "https://www.linkedin.com/in/vishnuraj910/"
         }
       ]
     }

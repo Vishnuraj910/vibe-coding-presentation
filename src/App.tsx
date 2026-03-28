@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import type { AllSlide, PresentationData } from "./types/slides";
 import data from "../public/data/slides.json";
 import { useTheme } from "./context/ThemeContext.tsx";
@@ -498,6 +498,7 @@ export default function App() {
   const [imageSrc, setImageSrc] = useState("");
   const [imageTitle, setImageTitle] = useState("");
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState<boolean>(!!document.fullscreenElement);
+  const transitionTimeoutRef = useRef<number | null>(null);
 
   const currentSlideData = allSlides[currentSlide];
   const activeColor = currentSlideData?.section_color || "#6C63FF";
@@ -529,8 +530,9 @@ export default function App() {
   const goTo = useCallback((idx: number) => {
     if (isTransitioning || idx < 0 || idx >= allSlides.length) return;
     setDirection(idx > currentSlide ? 1 : -1);
+    setRevealIndex(-1);
     setIsTransitioning(true);
-    setTimeout(() => {
+    transitionTimeoutRef.current = window.setTimeout(() => {
       setCurrentSlide(idx);
       setRevealIndex(-1);
       setIsTransitioning(false);
@@ -556,8 +558,9 @@ export default function App() {
       setRevealIndex(r => r - 1);
     } else if (currentSlide > 0) {
       setDirection(-1);
+      setRevealIndex(-1);
       setIsTransitioning(true);
-      setTimeout(() => {
+      transitionTimeoutRef.current = window.setTimeout(() => {
         const prevIdx = currentSlide - 1;
         const prevSteps = getRevealSteps(allSlides[prevIdx]);
         setCurrentSlide(prevIdx);
@@ -566,6 +569,14 @@ export default function App() {
       }, 280);
     }
   }, [isTransitioning, revealIndex, currentSlide]);
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current !== null) {
+        window.clearTimeout(transitionTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -765,7 +776,14 @@ export default function App() {
               transform: isTransitioning ? `translateX(${direction * 28}px)` : "translateX(0)",
               transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4,0,0,0.2,1)"
             }}>
-              <SlideContent slide={currentSlideData} revealIndex={revealIndex} onImageClick={handleOpenImage} isDark={isDark} themeColors={themeColors} />
+              <SlideContent
+                key={`${currentSlideData?.slide_number}-${isTransitioning ? "transition" : "stable"}`}
+                slide={currentSlideData}
+                revealIndex={revealIndex}
+                onImageClick={handleOpenImage}
+                isDark={isDark}
+                themeColors={themeColors}
+              />
 
               {!isAtEnd && !isTransitioning && (
                 <div style={{

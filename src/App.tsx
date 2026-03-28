@@ -10,16 +10,23 @@ data.sections.forEach((section) => {
   });
 });
 
-type RevealStep = { type: "stat" | "point" | "callout"; index?: number };
+type RevealStep = { type: "stat" | "point" | "callout" | "image"; index?: number };
 
 function getRevealSteps(slide: AllSlide): RevealStep[] {
   const steps: RevealStep[] = [];
   if (slide.stat) steps.push({ type: "stat" });
   (slide.points || []).forEach((_, i) => steps.push({ type: "point", index: i }));
+  if (slide.image) steps.push({ type: "image" });
   if (slide.callout) steps.push({ type: "callout" });
   if (slide.linkedinUrl) steps.push({ type: "point" });
   return steps;
 }
+
+// Window getter/setter for cross-component callback
+const getWindowOpenImage = (): (() => void) | undefined => (window as any).__openImageCallback__;
+const setWindowOpenImage = (fn: (() => void) | undefined): void => {
+  (window as any).__openImageCallback__ = fn;
+};
 
 interface GlassOrbProps {
   x: string | number;
@@ -176,13 +183,14 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
 interface SlideContentProps {
   slide: AllSlide;
   revealIndex: number;
+  onImageClick: () => void;
 }
 
-function SlideContent({ slide, revealIndex }: SlideContentProps) {
+function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
   const color = slide.section_color;
   const steps = getRevealSteps(slide);
 
-  const shown = (type: "stat" | "point" | "callout", idx?: number) => {
+  const shown = (type: "stat" | "point" | "callout" | "image", idx?: number) => {
     const si = steps.findIndex(s => s.type === type && (idx === undefined || s.index === idx));
     return si !== -1 && revealIndex >= si;
   };
@@ -191,14 +199,14 @@ function SlideContent({ slide, revealIndex }: SlideContentProps) {
     opacity: visible ? 1 : 0,
     transform: visible ? "translateY(0)" : "translateY(14px)",
     transition: "opacity 0.4s ease, transform 0.42s cubic-bezier(0.4,0,0,0.2,1)",
-    pointerEvents: visible ? "auto" : "none"
+    pointerEvents: visible ? "auto" : "none" as any
   });
 
   const slideRight = (visible: boolean) => ({
     opacity: visible ? 1 : 0,
     transform: visible ? "translateX(0)" : "translateX(-20px)",
     transition: "opacity 0.38s ease, transform 0.38s cubic-bezier(0.4,0,0,0.2,1)",
-    pointerEvents: visible ? "auto" : "none"
+    pointerEvents: visible ? "auto" : "none" as any
   });
 
   return (
@@ -273,6 +281,33 @@ function SlideContent({ slide, revealIndex }: SlideContentProps) {
         </div>
       )}
 
+      {slide.image && (
+        <div 
+          style={{
+            position: "relative" as const, overflow: "hidden", borderRadius: "16px",
+            background: `linear-gradient(135deg, ${color}20, ${color}08)`,
+            border: `1px solid ${color}35`, backdropFilter: "blur(20px)", marginBottom: "16px",
+            ...fadeUp(shown("image"))
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onImageClick();
+          }}
+          // Make image clickable to open modal (higher z-index click area)
+        >
+          <img
+            src={slide.image}
+            alt={slide.heading}
+            style={{
+              width: "100%", height: "100%",
+              objectFit: "contain",
+              display: "block",
+              transition: "opacity 0.4s ease, transform 0.42s cubic-bezier(0.4,0,0,0.2,1)"
+            }}
+          />
+        </div>
+      )}
+
       {slide.linkedinUrl && (
         <div style={{
           display: "flex", alignItems: "center", gap: "12px",
@@ -289,15 +324,71 @@ function SlideContent({ slide, revealIndex }: SlideContentProps) {
   );
 }
 
+function ImageModal({ isOpen, imageSrc, onClose, sectionColor, imageTitle }: { 
+  isOpen: boolean; 
+  imageSrc: string; 
+  onClose: () => void;
+  sectionColor: string;
+  imageTitle?: string;
+}) {
+  const overlayStyle = {
+    position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.9)",
+    display: isOpen ? "flex" : "none", alignItems: "center", justifyContent: "center",
+    zIndex: 1000, transition: "opacity 0.3s ease", cursor: "pointer" as const,
+    backdropFilter: "blur(5px)"
+  };
+  
+  return (
+    <div style={overlayStyle} onClick={onClose}>
+      <div style={{
+        position: "relative", display: "flex", alignItems: "center", justifyContent: "center",
+        width: "100vw", height: "100vh", padding: "20px", boxSizing: "border-box"
+      }}>
+        {imageSrc && (
+          <img 
+            src={imageSrc} 
+            alt={imageTitle || "Full screen"}
+            style={{
+              height: "100%",
+              maxWidth: "100%", maxHeight: "100%",
+              borderRadius: "16px", boxShadow: "0 0 60px rgba(255,255,255,0.1), 0 0 80px rgba(0,0,0,0.5)"
+            }}
+          />
+        )}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            onClose();
+          }}
+          style={{
+            position: "absolute", top: "30px", right: "30px",
+            padding: "12px 24px", fontSize: "14px", fontWeight: 600,
+            background: sectionColor, color: "#fff", border: "none",
+            borderRadius: "10px", cursor: "pointer", transition: "all 0.2s ease",
+            fontFamily: "'Inter', sans-serif", boxShadow: "0 4px 15px rgba(0,0,0,0.3)"
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.05)"; e.currentTarget.style.background = `${sectionColor}cc`; }}
+          onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+        >
+          ✕ Close
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const [showTitle, setShowTitle] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [revealIndex, setRevealIndex] = useState(-1);
   const [direction, setDirection] = useState(1);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showImageModal, setShowImageModal] = useState(false);
+  const [imageSrc, setImageSrc] = useState("");
 
   const currentSlideData = allSlides[currentSlide];
   const activeColor = currentSlideData?.section_color || "#6C63FF";
+  const sectionColor = currentSlideData?.section_color || "#6C63FF";
   const steps = currentSlideData ? getRevealSteps(currentSlideData) : [];
   const totalSteps = steps.length;
   const fullyRevealed = revealIndex >= totalSteps - 1;
@@ -305,6 +396,21 @@ export default function App() {
   const currentSectionIdx = data.sections.findIndex(s =>
     s.slides.some(sl => sl.slide_number === currentSlideData?.slide_number)
   );
+
+  const handleOpenImage = useCallback(() => {
+    if (currentSlideData?.image) {
+      setImageSrc(currentSlideData.image);
+      setShowImageModal(true);
+    }
+  }, [currentSlideData?.image]);
+
+  // Initialize window callback
+  useEffect(() => {
+    setWindowOpenImage(handleOpenImage);
+    return () => {
+      setWindowOpenImage(undefined);
+    };
+  }, [handleOpenImage]);
 
   const goTo = useCallback((idx: number) => {
     if (isTransitioning || idx < 0 || idx >= allSlides.length) return;
@@ -350,11 +456,21 @@ export default function App() {
       } else {
         if (["ArrowRight", "ArrowDown", " ", "PageDown"].includes(e.key)) { e.preventDefault(); advance(); return; }
         if (["ArrowLeft", "ArrowUp", "PageUp"].includes(e.key)) { e.preventDefault(); stepBack(); return; }
+        if ((e.key === "Escape" && showImageModal) || (e.key === "." && currentSlideData?.image && !showImageModal)) {
+          if (showImageModal) {
+            e.preventDefault();
+            setShowImageModal(false);
+          } else if (currentSlideData?.image) {
+            e.preventDefault();
+            setImageSrc(currentSlideData.image);
+            setShowImageModal(true);
+          }
+        }
       }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [showTitle, advance, stepBack]);
+  }, [showTitle, advance, stepBack, showImageModal, currentSlideData?.image]);
 
   const jumpToSection = useCallback((sectionIdx: number) => {
     const section = data.sections[sectionIdx];
@@ -382,6 +498,14 @@ export default function App() {
         backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
         backgroundSize: "60px 60px", pointerEvents: "none" as const
       }} />
+
+      <ImageModal
+        isOpen={showImageModal}
+        imageSrc={imageSrc}
+        onClose={() => setShowImageModal(false)}
+        sectionColor={sectionColor}
+        imageTitle={currentSlideData?.heading}
+      />
 
       <div style={{
         width: "min(96vw, 1100px)", height: "min(92vh, 700px)",
@@ -442,7 +566,7 @@ export default function App() {
               transform: isTransitioning ? `translateX(${direction * 28}px)` : "translateX(0)",
               transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4,0,0,0.2,1)"
             }}>
-              <SlideContent slide={currentSlideData} revealIndex={revealIndex} />
+              <SlideContent slide={currentSlideData} revealIndex={revealIndex} onImageClick={handleOpenImage} />
 
               {!isAtEnd && !isTransitioning && (
                 <div style={{
@@ -524,7 +648,7 @@ export default function App() {
           position: "absolute" as const, bottom: "12px", left: "50%", transform: "translateX(-50%)",
           fontSize: "10px", color: "rgba(255,255,255,0.16)", letterSpacing: "0.08em", pointerEvents: "none" as const, whiteSpace: "nowrap" as const
         }}>
-          SPACE / → / CLICK SLIDE — REVEAL · ← / BACKSPACE — STEP BACK
+          SPACE / → / CLICK SLIDE — REVEAL · ← / BACKSPACE — STEP BACK · ESC — CLOSE IMAGE
         </div>
       )}
     </div>

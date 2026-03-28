@@ -12,10 +12,11 @@ export interface Slide {
   slide_number: number;
   heading: string;
   subheading: string;
-  points: string[];
+  points?: string[];
   stat?: Stat;
   callout?: string;
   linkedinUrl?: string;
+  image?: string;
 }
 
 export interface Stat {
@@ -28,6 +29,10 @@ export interface PresentationData {
   presentation_subtitle: string;
   tagline: string;
   version: string;
+  into_speaker?: {
+    name: string;
+    designation: string;
+  };
   sections: Section[];
 }
 

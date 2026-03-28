@@ -3,6 +3,10 @@
   "presentation_subtitle": "From Coder to Pilot",
   "tagline": "Stop writing code. Start steering intent.",
   "version": "2026 Edition",
+  "into_speaker": {
+    "name": "Vishnuraj Rajagopal",
+    "designation": "Staff Full Stack Engineer"
+  },
   "sections": [
     {
       "section_name": "The Shift",
@@ -16,7 +20,6 @@
           "points": [
             "The industry has crossed a threshold — AI agents now write code faster than humans type.",
             "The shift is from 'writing lines' to 'steering intent' — you are the pilot, not the engine.",
-            "Staying manual in 2026 is like hand-cranking your car. The technology exists. Use it.",
             "This isn't about replacing developers — it's about 10x-ing what one developer can ship."
           ],
           "stat": {
@@ -66,6 +69,13 @@
             "Always benchmark: run both models on the same task and measure output quality vs. cost ratio."
           ],
           "callout": "The right model for the right task. Economic engineering is a developer skill now."
+        },
+        {
+          "slide_number": 5,
+          "heading": "Everyone is using AI Agents",
+          "subheading": "The GAP in hype vs. reality is closing fast — don't be the last to adopt.",
+          "image": "/ai_adoption.jpg",
+          "callout": "You are not behind the curve. The curve is behind you. The question is how fast you can catch up."
         }
       ]
     },

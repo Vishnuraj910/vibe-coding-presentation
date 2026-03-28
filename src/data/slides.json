@@ -380,5 +380,20 @@
         }
       ]
     }
-  ]
+  ],
+  "final": {
+    "heading": "Resources",
+    "subheading": "Keep in touch and keep learning — the journey is just beginning.",
+    "cards": [
+      {
+        "title": "Slides",
+        "image": "src/assets/qr-slides.png"
+      },
+      {
+        "title": "LinkedIn",
+        "image": "src/assets/qr-code.png"
+      }]
+      
+
+  }
 }

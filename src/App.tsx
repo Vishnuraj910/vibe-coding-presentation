@@ -1,8 +1,9 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import type { AllSlide, PresentationData } from "./types/slides";
+import type { AllSlide, PresentationData, FinalData } from "./types/slides";
 import data from "./data/slides.json";
 import { useTheme } from "./context/ThemeContext.tsx";
 import ThemeToggle from "./components/ThemeToggle";
+import FinalPage from "./components/FinalPage";
 
 // Flatten slides with section metadata
 const allSlides: AllSlide[] = [];
@@ -504,6 +505,7 @@ export default function App() {
   }), [isDark]);
 
   const [showTitle, setShowTitle] = useState(true);
+  const [showFinalPage, setShowFinalPage] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [revealIndex, setRevealIndex] = useState(-1);
   const [direction, setDirection] = useState(1);
@@ -513,6 +515,9 @@ export default function App() {
   const [imageTitle, setImageTitle] = useState("");
   const [isBrowserFullscreen, setIsBrowserFullscreen] = useState<boolean>(!!document.fullscreenElement);
   const transitionTimeoutRef = useRef<number | null>(null);
+
+  // Get final data from slides.json
+  const finalData: FinalData | undefined = data.final;
 
   const currentSlideData = allSlides[currentSlide];
   const activeColor = currentSlideData?.section_color || "#6C63FF";
@@ -557,17 +562,25 @@ export default function App() {
     if (isTransitioning) return;
     if (revealIndex < totalSteps - 1) {
       setRevealIndex(r => r + 1);
+    } else if (currentSlide < allSlides.length - 1) {
+      goTo(currentSlide + 1);
+    } else if (finalData) {
+      // At the last slide and final data exists - go to final page (skip QR modal)
+      setShowFinalPage(true);
     } else if (currentSlideData?.linkedinUrl) {
       setImageSrc("src/assets/qr-code.png");
       setImageTitle("LinkedIn QR Code");
       setShowImageModal(true);
-    } else if (currentSlide < allSlides.length - 1) {
-      goTo(currentSlide + 1);
     }
-  }, [isTransitioning, revealIndex, totalSteps, currentSlide, goTo, currentSlideData?.linkedinUrl]);
+  }, [isTransitioning, revealIndex, totalSteps, currentSlide, goTo, currentSlideData?.linkedinUrl, finalData]);
 
   const stepBack = useCallback(() => {
     if (isTransitioning) return;
+    if (showFinalPage) {
+      // Go back from final page to last slide
+      setShowFinalPage(false);
+      return;
+    }
     if (revealIndex > -1) {
       setRevealIndex(r => r - 1);
     } else if (currentSlide > 0) {
@@ -582,7 +595,7 @@ export default function App() {
         setIsTransitioning(false);
       }, 280);
     }
-  }, [isTransitioning, revealIndex, currentSlide]);
+  }, [isTransitioning, revealIndex, currentSlide, showFinalPage]);
 
   useEffect(() => {
     return () => {
@@ -745,6 +758,14 @@ export default function App() {
 
         {showTitle ? (
           <TitleSlide data={data} onStart={() => setShowTitle(false)} isDark={isDark} themeColors={themeColors} />
+        ) : showFinalPage && finalData ? (
+          <FinalPage 
+            data={finalData} 
+            onBack={() => setShowFinalPage(false)} 
+            sectionColor={sectionColor}
+            isDark={isDark}
+            themeColors={themeColors}
+          />
         ) : (
           <>
             <div style={{

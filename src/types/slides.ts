@@ -35,6 +35,7 @@ export interface PresentationData {
     designation: string;
   };
   sections: Section[];
+  final?: FinalData;
 }
 
 export type AllSlide = Slide & {
@@ -42,3 +43,27 @@ export type AllSlide = Slide & {
   section_icon: string;
   section_color: string;
 };
+
+export interface Card {
+  title: string;
+  image: string;
+}
+
+export interface FinalData {
+  heading: string;
+  subheading: string;
+  cards: Card[];
+}
+
+export interface ThemeColors {
+  bg: string;
+  bgGradient: string;
+  text: string;
+  textMuted: string;
+  textSubtle: string;
+  border: string;
+  glassBg: string;
+  glassBorder: string;
+  cardBg: string;
+  cardBorder: string;
+}

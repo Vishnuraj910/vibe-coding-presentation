@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type { AllSlide, PresentationData } from "./types/slides";
 import data from "../public/data/slides.json";
+import { useTheme } from "./context/ThemeContext.tsx";
+import ThemeToggle from "./components/ThemeToggle";
 
 // Flatten slides with section metadata
 const allSlides: AllSlide[] = [];
@@ -35,13 +37,14 @@ interface GlassOrbProps {
   color: string;
   opacity?: number;
   blur?: number;
+  isDark: boolean;
 }
 
-function GlassOrb({ x, y, size, color, opacity = 0.15, blur = 80 }: GlassOrbProps) {
+function GlassOrb({ x, y, size, color, opacity = 0.15, blur = 80, isDark }: GlassOrbProps) {
   return (
     <div style={{
       position: "absolute" as const, left: x, top: y, width: size, height: size,
-      borderRadius: "50%", background: color, opacity: opacity ?? 0.15,
+      borderRadius: "50%", background: color, opacity: isDark ? (opacity ?? 0.15) : (opacity ?? 0.15) * 0.6,
       filter: `blur(${blur ?? 80}px)`, pointerEvents: "none" as const, transition: "all 1.5s ease"
     }} />
   );
@@ -51,11 +54,17 @@ interface ProgressBarProps {
   current: number;
   total: number;
   color: string;
+  isDark: boolean;
 }
 
-function ProgressBar({ current, total, color }: ProgressBarProps) {
+function ProgressBar({ current, total, color, isDark }: ProgressBarProps) {
   return (
-    <div style={{ height: "3px", background: "rgba(255,255,255,0.1)", borderRadius: "2px" as const, overflow: "hidden" }}>
+    <div style={{ 
+      height: "3px", 
+      background: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.08)", 
+      borderRadius: "2px" as const, 
+      overflow: "hidden" 
+    }}>
       <div style={{
         height: "100%", width: `${((current + 1) / total) * 100}%`,
         background: `linear-gradient(90deg, ${color}, ${color}cc)`,
@@ -70,9 +79,10 @@ interface SectionNavProps {
   sections: PresentationData["sections"];
   currentSection: number;
   onSelect: (idx: number) => void;
+  isDark: boolean;
 }
 
-function SectionNav({ sections, currentSection, onSelect }: SectionNavProps) {
+function SectionNav({ sections, currentSection, onSelect, isDark }: SectionNavProps) {
   return (
     <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", justifyContent: "center" }}>
       {sections.map((sec, i) => (
@@ -81,9 +91,9 @@ function SectionNav({ sections, currentSection, onSelect }: SectionNavProps) {
           onClick={(e) => { e.stopPropagation(); onSelect(i); }}
           style={{
             padding: "4px 12px", borderRadius: "20px", fontSize: "11px", fontWeight: 600,
-            border: `1px solid ${currentSection === i ? sec.section_color : "rgba(255,255,255,0.15)"}`,
-            background: currentSection === i ? `${sec.section_color}25` : "rgba(255,255,255,0.05)",
-            color: currentSection === i ? sec.section_color : "rgba(255,255,255,0.5)",
+            border: `1px solid ${currentSection === i ? sec.section_color : isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)"}`,
+            background: currentSection === i ? `${sec.section_color}25` : isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.03)",
+            color: currentSection === i ? sec.section_color : isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.5)",
             cursor: "pointer", transition: "all 0.3s ease", letterSpacing: "0.03em", backdropFilter: "blur(10px)"
           }}
         >
@@ -97,9 +107,24 @@ function SectionNav({ sections, currentSection, onSelect }: SectionNavProps) {
 interface TitleSlideProps {
   data: PresentationData;
   onStart: () => void;
+  isDark: boolean;
+  themeColors: ThemeColors;
 }
 
-function TitleSlide({ data, onStart }: TitleSlideProps) {
+interface ThemeColors {
+  bg: string;
+  bgGradient: string;
+  text: string;
+  textMuted: string;
+  textSubtle: string;
+  border: string;
+  glassBg: string;
+  glassBorder: string;
+  cardBg: string;
+  cardBorder: string;
+}
+
+function TitleSlide({ data, onStart, isDark, themeColors }: TitleSlideProps) {
   const [visible, setVisible] = useState(false);
   useEffect(() => { const t = setTimeout(() => setVisible(true), 100); return () => clearTimeout(t); }, []);
   return (
@@ -113,21 +138,23 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
         display: "flex", flexDirection: "column", alignItems: "center", gap: "8px"
       }}>
         <div style={{
-          fontSize: "11px", fontWeight: 700, letterSpacing: "0.2em", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" as const, marginBottom: "8px"
+          fontSize: "11px", fontWeight: 700, letterSpacing: "0.2em", 
+          color: themeColors.textMuted, 
+          textTransform: "uppercase" as const, marginBottom: "8px"
         }}>
           {data.version}
         </div>
         <h1 style={{
           fontSize: "clamp(42px, 7vw, 80px)", fontWeight: 800, margin: 0,
-          background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          lineHeight: 1.05, letterSpacing: "-0.03em"
+          color: isDark ? "#ffffff" : "#1d1d1f",
+          lineHeight: 1.05, letterSpacing: "-0.03em",
+          transition: "color 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
         }}>
           {data.presentation_title}
         </h1>
         <div style={{
           fontSize: "clamp(20px, 3.5vw, 36px)", fontWeight: 300,
-          color: "rgba(255,255,255,0.6)", letterSpacing: "0.01em"
+          color: themeColors.textSubtle, letterSpacing: "0.01em"
         }}>
           {data.presentation_subtitle}
         </div>
@@ -139,8 +166,11 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
       }}>
         <div style={{
           padding: "12px 28px", borderRadius: "100px",
-          background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.15)",
-          backdropFilter: "blur(20px)", fontSize: "14px", color: "rgba(255,255,255,0.7)", fontStyle: "italic", letterSpacing: "0.02em"
+          background: themeColors.glassBg, 
+          border: `1px solid ${themeColors.glassBorder}`,
+          backdropFilter: "blur(20px)", fontSize: "14px", 
+          color: themeColors.textMuted, 
+          fontStyle: "italic", letterSpacing: "0.02em"
         }}>
           "{data.tagline}"
         </div>
@@ -158,7 +188,7 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
             color: s.section_color, fontWeight: 600
           }}>
             {s.section_icon} {s.section_name}
-            <span style={{ color: "rgba(255,255,255,0.3)", fontWeight: 400 }}>{s.slides.length}</span>
+            <span style={{ color: themeColors.textMuted, fontWeight: 400 }}>{s.slides.length}</span>
           </div>
         ))}
       </div>
@@ -177,15 +207,15 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
             gap: "4px",
             padding: "12px 22px",
             borderRadius: "14px",
-            background: "rgba(255,255,255,0.06)",
-            border: "1px solid rgba(255,255,255,0.16)",
+            background: themeColors.glassBg,
+            border: `1px solid ${themeColors.glassBorder}`,
             backdropFilter: "blur(16px)"
           }}>
             <div style={{
               fontSize: "11px",
               letterSpacing: "0.14em",
               textTransform: "uppercase" as const,
-              color: "rgba(255,255,255,0.45)",
+              color: themeColors.textMuted,
               fontWeight: 700
             }}>
               Speaker
@@ -193,14 +223,14 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
             <div style={{
               fontSize: "20px",
               fontWeight: 700,
-              color: "rgba(255,255,255,0.95)",
+              color: themeColors.text,
               lineHeight: 1.2
             }}>
               {data.into_speaker.name}
             </div>
             <div style={{
               fontSize: "14px",
-              color: "rgba(255,255,255,0.65)",
+              color: themeColors.textSubtle,
               fontWeight: 500
             }}>
               {data.into_speaker.designation}
@@ -211,14 +241,19 @@ function TitleSlide({ data, onStart }: TitleSlideProps) {
 
       <button onClick={onStart} style={{
         marginTop: "16px", padding: "16px 48px", borderRadius: "100px",
-        background: "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))",
-        border: "1px solid rgba(255,255,255,0.25)", color: "#fff", fontSize: "16px", fontWeight: 600,
+        background: isDark 
+          ? "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))"
+          : "linear-gradient(135deg, rgba(0,0,0,0.12), rgba(0,0,0,0.04))",
+        border: `1px solid ${themeColors.border}`, 
+        color: themeColors.text, 
+        fontSize: "16px", fontWeight: 600,
         cursor: "pointer", backdropFilter: "blur(20px)", letterSpacing: "0.05em",
         transition: "all 0.3s ease", opacity: visible ? 1 : 0,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.3)", textTransform: "uppercase" as const
+        boxShadow: isDark ? "0 8px 32px rgba(0,0,0,0.3)" : "0 8px 32px rgba(0,0,0,0.1)", 
+        textTransform: "uppercase" as const
       }}
-        onMouseEnter={(e) => { const btn = e.currentTarget as HTMLButtonElement; btn.style.background = "rgba(255,255,255,0.2)"; btn.style.transform = "scale(1.03)"; }}
-        onMouseLeave={(e) => { const btn = e.currentTarget as HTMLButtonElement; btn.style.background = "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))"; btn.style.transform = "scale(1)"; }}
+        onMouseEnter={(e) => { const btn = e.currentTarget as HTMLButtonElement; btn.style.background = isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.18)"; btn.style.transform = "scale(1.03)"; }}
+        onMouseLeave={(e) => { const btn = e.currentTarget as HTMLButtonElement; btn.style.background = isDark ? "linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05))" : "linear-gradient(135deg, rgba(0,0,0,0.12), rgba(0,0,0,0.04))"; btn.style.transform = "scale(1)"; }}
       >
         Begin →
       </button>
@@ -230,9 +265,11 @@ interface SlideContentProps {
   slide: AllSlide;
   revealIndex: number;
   onImageClick: () => void;
+  isDark: boolean;
+  themeColors: ThemeColors;
 }
 
-function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
+function SlideContent({ slide, revealIndex, onImageClick, isDark, themeColors }: SlideContentProps) {
   const color = slide.section_color;
   const steps = getRevealSteps(slide);
 
@@ -261,16 +298,18 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
       <div>
         <h2 style={{
           margin: 0, fontSize: "clamp(26px, 4vw, 44px)", fontWeight: 800,
-          background: "linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.75) 100%)",
-          WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-          lineHeight: 1.1, letterSpacing: "-0.02em"
+          color: isDark ? "#ffffff" : "#1d1d1f",
+          lineHeight: 1.1, letterSpacing: "-0.02em",
+          transition: "color 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
         }}>
           {slide.heading}
         </h2>
         {slide.subheading && (
           <p style={{
             margin: "8px 0 0", fontSize: "clamp(13px, 1.8vw, 17px)",
-            color: "rgba(255,255,255,0.45)", fontWeight: 400, fontStyle: "italic", lineHeight: 1.4
+            color: themeColors.textMuted, 
+            fontWeight: 400, fontStyle: "italic", lineHeight: 1.4,
+            transition: "color 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
           }}>
             {slide.subheading}
           </p>
@@ -288,7 +327,7 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
           <div style={{ fontSize: "clamp(36px, 5vw, 52px)", fontWeight: 900, color, lineHeight: 1, flexShrink: 0 }}>
             {slide.stat.value}
           </div>
-          <div style={{ fontSize: "14px", color: "rgba(255,255,255,0.55)", lineHeight: 1.4 }}>
+          <div style={{ fontSize: "14px", color: themeColors.textSubtle, lineHeight: 1.4 }}>
             {slide.stat.label}
           </div>
         </div>
@@ -307,7 +346,8 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
             }} />
             <p style={{
               margin: 0, fontSize: "clamp(16px, 1.92vw, 18px)",
-              color: "rgba(255,255,255,0.78)", lineHeight: 1.65, fontWeight: 400
+              color: themeColors.textSubtle, 
+              lineHeight: 1.65, fontWeight: 400
             }}>
               {point}
             </p>
@@ -318,11 +358,12 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
       {slide.callout && (
         <div style={{
           padding: "15px 20px", borderRadius: "12px",
-          background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)",
+          background: themeColors.cardBg, 
+          border: `1px solid ${themeColors.cardBorder}`,
           borderLeft: `3px solid ${color}`, backdropFilter: "blur(20px)" as const,
           ...fadeUp(shown("callout"))
         }}>
-          <p style={{ margin: 0, fontSize: "clamp(12px, 1.5vw, 14px)", color: "rgba(255,255,255,0.6)", lineHeight: 1.6, fontStyle: "italic" }}>
+          <p style={{ margin: 0, fontSize: "clamp(12px, 1.5vw, 14px)", color: themeColors.textMuted, lineHeight: 1.6, fontStyle: "italic" }}>
             <span style={{ color, fontWeight: 700, fontStyle: "normal" }}>→ </span>
             {slide.callout}
           </p>
@@ -341,7 +382,6 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
             e.stopPropagation();
             onImageClick();
           }}
-          // Make image clickable to open modal (higher z-index click area)
         >
           <img
             src={slide.image}
@@ -364,7 +404,7 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
           ...fadeUp(shown("point"))
         }}>
           <span style={{ fontSize: "18px" }}>💼</span>
-          <span style={{ fontSize: "13px", color: "rgba(255,255,255,0.6)" }}>Connect on LinkedIn</span>
+          <span style={{ fontSize: "13px", color: themeColors.textMuted }}>Connect on LinkedIn</span>
           <span style={{ fontSize: "12px", color: "#5AA7D4", marginLeft: "auto" }}>{slide.linkedinUrl}</span>
         </div>
       )}
@@ -372,15 +412,17 @@ function SlideContent({ slide, revealIndex, onImageClick }: SlideContentProps) {
   );
 }
 
-function ImageModal({ isOpen, imageSrc, onClose, sectionColor, imageTitle }: { 
+function ImageModal({ isOpen, imageSrc, onClose, sectionColor, imageTitle, isDark }: { 
   isOpen: boolean; 
   imageSrc: string; 
   onClose: () => void;
   sectionColor: string;
   imageTitle?: string;
+  isDark: boolean;
 }) {
   const overlayStyle = {
-    position: "fixed" as const, inset: 0, background: "rgba(0,0,0,0.9)",
+    position: "fixed" as const, inset: 0, 
+    background: isDark ? "rgba(0,0,0,0.9)" : "rgba(255,255,255,0.95)",
     display: isOpen ? "flex" : "none", alignItems: "center", justifyContent: "center",
     zIndex: 1000, transition: "opacity 0.3s ease", cursor: "pointer" as const,
     backdropFilter: "blur(5px)"
@@ -399,7 +441,10 @@ function ImageModal({ isOpen, imageSrc, onClose, sectionColor, imageTitle }: {
             style={{
               height: "100%",
               maxWidth: "100%", maxHeight: "100%",
-              borderRadius: "16px", boxShadow: "0 0 60px rgba(255,255,255,0.1), 0 0 80px rgba(0,0,0,0.5)"
+              borderRadius: "16px", 
+              boxShadow: isDark 
+                ? "0 0 60px rgba(255,255,255,0.1), 0 0 80px rgba(0,0,0,0.5)"
+                : "0 0 60px rgba(0,0,0,0.1), 0 0 80px rgba(0,0,0,0.2)"
             }}
           />
         )}
@@ -426,6 +471,24 @@ function ImageModal({ isOpen, imageSrc, onClose, sectionColor, imageTitle }: {
 }
 
 export default function App() {
+  const { isDark } = useTheme();
+  
+  // Theme-aware colors
+  const themeColors: ThemeColors = useMemo(() => ({
+    bg: isDark ? "#080B14" : "#F5F5F7",
+    bgGradient: isDark 
+      ? "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)"
+      : "linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)",
+    text: isDark ? "#ffffff" : "#1d1d1f",
+    textMuted: isDark ? "rgba(255,255,255,0.45)" : "rgba(0,0,0,0.5)",
+    textSubtle: isDark ? "rgba(255,255,255,0.78)" : "rgba(0,0,0,0.7)",
+    border: isDark ? "rgba(255,255,255,0.25)" : "rgba(0,0,0,0.15)",
+    glassBg: isDark ? "rgba(255,255,255,0.06)" : "rgba(255,255,255,0.7)",
+    glassBorder: isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
+    cardBg: isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)",
+    cardBorder: isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.06)",
+  }), [isDark]);
+
   const [showTitle, setShowTitle] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [revealIndex, setRevealIndex] = useState(-1);
@@ -561,7 +624,8 @@ export default function App() {
 
   return (
     <div style={{
-      width: "100vw", height: "100vh", background: "#080B14",
+      width: "100vw", height: "100vh", 
+      background: themeColors.bg,
       display: "flex", alignItems: "center",
       justifyContent: "center",
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -569,17 +633,25 @@ export default function App() {
       userSelect: "none" as const,
       WebkitUserSelect: "none" as const,
       msUserSelect: "none" as const,
-      WebkitTapHighlightColor: "transparent"
+      WebkitTapHighlightColor: "transparent",
+      transition: "background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1)"
     }}>
-      <GlassOrb x="-10%" y="-15%" size="50vw" color={activeColor} opacity={0.12} blur={120} />
-      <GlassOrb x="60%" y="50%" size="40vw" color={showTitle ? "#A78BFA" : activeColor} opacity={0.08} blur={100} />
-      <GlassOrb x="20%" y="70%" size="30vw" color="#00D4AA" opacity={0.06} blur={80} />
+      <GlassOrb x="-10%" y="-15%" size="50vw" color={activeColor} opacity={0.12} blur={120} isDark={isDark} />
+      <GlassOrb x="60%" y="50%" size="40vw" color={showTitle ? "#A78BFA" : activeColor} opacity={0.08} blur={100} isDark={isDark} />
+      <GlassOrb x="20%" y="70%" size="30vw" color="#00D4AA" opacity={0.06} blur={80} isDark={isDark} />
 
       <div style={{
-        position: "absolute" as const, inset: 0, opacity: 0.025,
-        backgroundImage: "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)",
-        backgroundSize: "60px 60px", pointerEvents: "none" as const
+        position: "absolute" as const, inset: 0, 
+        opacity: isDark ? 0.025 : 0.03,
+        backgroundImage: isDark 
+          ? "linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)"
+          : "linear-gradient(rgba(0,0,0,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.15) 1px, transparent 1px)",
+        backgroundSize: "60px 60px", pointerEvents: "none" as const,
+        transition: "opacity 0.5s ease"
       }} />
+
+      {/* Theme Toggle - positioned at top left */}
+      <ThemeToggle />
 
       <button
         onClick={toggleBrowserFullscreen}
@@ -593,9 +665,9 @@ export default function App() {
           width: "40px",
           height: "40px",
           borderRadius: "10px",
-          border: "1px solid rgba(255,255,255,0.2)",
-          background: "rgba(255,255,255,0.08)",
-          color: "rgba(255,255,255,0.9)",
+          border: `1px solid ${themeColors.border}`,
+          background: themeColors.glassBg,
+          color: themeColors.text,
           backdropFilter: "blur(10px)",
           cursor: "pointer",
           display: "flex",
@@ -605,11 +677,11 @@ export default function App() {
           transition: "all 0.2s ease"
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = "rgba(255,255,255,0.16)";
+          e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.16)" : "rgba(0,0,0,0.08)";
           e.currentTarget.style.transform = "scale(1.05)";
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = "rgba(255,255,255,0.08)";
+          e.currentTarget.style.background = themeColors.glassBg;
           e.currentTarget.style.transform = "scale(1)";
         }}
       >
@@ -622,37 +694,47 @@ export default function App() {
         onClose={() => setShowImageModal(false)}
         sectionColor={sectionColor}
         imageTitle={imageTitle || currentSlideData?.heading}
+        isDark={isDark}
       />
 
       <div style={{
         width: "min(99vw, 1360px)", height: "min(97vh, 860px)",
         borderRadius: "28px", position: "relative", overflow: "hidden",
-        background: "linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)",
-        border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(40px) saturate(180%)",
-        boxShadow: `0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 80px ${activeColor}15`,
-        transition: "box-shadow 1s ease", display: "flex", flexDirection: "column" as const
+        background: themeColors.bgGradient,
+        border: `1px solid ${themeColors.glassBorder}`, 
+        backdropFilter: "blur(40px) saturate(180%)",
+        boxShadow: isDark 
+          ? `0 40px 120px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 80px ${activeColor}15`
+          : `0 40px 120px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.03), inset 0 1px 0 rgba(255,255,255,0.5), 0 0 80px ${activeColor}10`,
+        transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)", 
+        display: "flex", flexDirection: "column" as const
       }}>
         <div style={{
           position: "absolute" as const, top: 0, left: 0, right: 0, height: "50%",
-          background: "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)",
-          borderRadius: "28px 28px 0 0", pointerEvents: "none" as const
+          background: isDark 
+            ? "linear-gradient(180deg, rgba(255,255,255,0.06) 0%, transparent 100%)"
+            : "linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)",
+          borderRadius: "28px 28px 0 0", pointerEvents: "none" as const,
+          transition: "background 0.5s ease"
         }} />
 
         {showTitle ? (
-          <TitleSlide data={data} onStart={() => setShowTitle(false)} />
+          <TitleSlide data={data} onStart={() => setShowTitle(false)} isDark={isDark} themeColors={themeColors} />
         ) : (
           <>
             <div style={{
-              padding: "14px 24px 12px", borderBottom: "1px solid rgba(255,255,255,0.07)",
+              padding: "14px 24px 12px", 
+              borderBottom: `1px solid ${themeColors.cardBorder}`,
               display: "flex", flexDirection: "column", gap: "10px", flexShrink: 0
             }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <button onClick={(e) => { e.stopPropagation(); setShowTitle(true); }} style={{
-                  background: "none", border: "none", color: "rgba(255,255,255,0.3)",
+                  background: "none", border: "none", 
+                  color: themeColors.textMuted,
                   fontSize: "12px", cursor: "pointer" as const, padding: 0, letterSpacing: "0.05em" as const
                 }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.7)"; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = "rgba(255,255,255,0.3)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = themeColors.textSubtle; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = themeColors.textMuted; }}
                 >← HOME</button>
 
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
@@ -661,19 +743,19 @@ export default function App() {
                       <div key={i} style={{
                         width: i <= revealIndex ? "14px" : "5px", height: "5px" as string,
                         borderRadius: "3px", transition: "all 0.3s ease",
-                        background: i <= revealIndex ? activeColor : "rgba(255,255,255,0.15)",
+                        background: i <= revealIndex ? activeColor : isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
                         boxShadow: i <= revealIndex ? `0 0 5px ${activeColor}60` : "none"
                       }} />
                     ))}
                   </div>
-                  <div style={{ fontSize: "11px", color: "rgba(255,255,255,0.25)", fontWeight: 500, letterSpacing: "0.05em" }}>
+                  <div style={{ fontSize: "11px", color: themeColors.textMuted, fontWeight: 500, letterSpacing: "0.05em" }}>
                     {currentSlide + 1} / {allSlides.length}
                   </div>
                 </div>
               </div>
 
-              <SectionNav sections={data.sections} currentSection={currentSectionIdx} onSelect={jumpToSection} />
-              <ProgressBar current={currentSlide} total={allSlides.length} color={activeColor} />
+              <SectionNav sections={data.sections} currentSection={currentSectionIdx} onSelect={jumpToSection} isDark={isDark} />
+              <ProgressBar current={currentSlide} total={allSlides.length} color={activeColor} isDark={isDark} />
             </div>
 
             <div onClick={advance} style={{
@@ -683,17 +765,18 @@ export default function App() {
               transform: isTransitioning ? `translateX(${direction * 28}px)` : "translateX(0)",
               transition: "opacity 0.28s ease, transform 0.28s cubic-bezier(0.4,0,0,0.2,1)"
             }}>
-              <SlideContent slide={currentSlideData} revealIndex={revealIndex} onImageClick={handleOpenImage} />
+              <SlideContent slide={currentSlideData} revealIndex={revealIndex} onImageClick={handleOpenImage} isDark={isDark} themeColors={themeColors} />
 
               {!isAtEnd && !isTransitioning && (
                 <div style={{
                   position: "absolute" as const, top: "14px", right: "20px",
                   display: "flex", alignItems: "center", gap: "6px",
                   padding: "5px 12px", borderRadius: "20px",
-                  background: "rgba(255,255,255,0.04)", border: `1px solid ${activeColor}25`
+                  background: themeColors.cardBg, 
+                  border: `1px solid ${activeColor}25`
                 }}>
                   <div style={{ width: "5px", height: "5px" as string, borderRadius: "50%", background: activeColor, opacity: 0.7 }} />
-                  <span style={{ fontSize: "10px", color: "rgba(255,255,255,0.25)", letterSpacing: "0.05em" }}>
+                  <span style={{ fontSize: "10px", color: themeColors.textMuted, letterSpacing: "0.05em" }}>
                     {fullyRevealed
                       ? "click or → for next slide"
                       : `${totalSteps - 1 - revealIndex} item${totalSteps - 1 - revealIndex !== 1 ? "s" : ""} remaining`}
@@ -703,7 +786,8 @@ export default function App() {
             </div>
 
             <div style={{
-              padding: "11px 24px", borderTop: "1px solid rgba(255,255,255,0.07)",
+              padding: "11px 24px", 
+              borderTop: `1px solid ${themeColors.cardBorder}`,
               display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0
             }}>
               <button
@@ -711,14 +795,15 @@ export default function App() {
                 disabled={isAtStart}
                 style={{
                   padding: "8px 20px", borderRadius: "100px",
-                  background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)",
-                  color: isAtStart ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.7)",
+                  background: themeColors.cardBg, 
+                  border: `1px solid ${themeColors.cardBorder}`,
+                  color: isAtStart ? themeColors.textMuted : themeColors.textSubtle,
                   fontSize: "13px", fontWeight: 600,
                   cursor: isAtStart ? "not-allowed" : "pointer" as const,
                   transition: "all 0.2s ease", letterSpacing: "0.03em" as const, backdropFilter: "blur(10px)"
                 }}
-                onMouseEnter={(e) => { if (!isAtStart) e.currentTarget.style.background = "rgba(255,255,255,0.12)"; }}
-                onMouseLeave={(e) => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                onMouseEnter={(e) => { if (!isAtStart) e.currentTarget.style.background = isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.08)"; }}
+                onMouseLeave={(e) => e.currentTarget.style.background = themeColors.cardBg}
               >← Back</button>
 
               <div style={{ display: "flex", gap: "5px", alignItems: "center" }}>
@@ -728,7 +813,7 @@ export default function App() {
                   return (
                     <button key={i} onClick={(e) => { e.stopPropagation(); goTo(i); }} style={{
                       width: isCur ? "20px" : "5px" as string, height: "5px" as string, borderRadius: "3px", border: "none" as const,
-                      background: isCur ? (sec?.section_color || "#fff") : "rgba(255,255,255,0.15)",
+                      background: isCur ? (sec?.section_color || (isDark ? "#fff" : "#1d1d1f")) : isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.12)",
                       cursor: "pointer" as const, transition: "all 0.3s ease", padding: 0,
                       boxShadow: isCur ? `0 0 6px ${sec?.section_color}80` : "none"
                     }} />
@@ -742,10 +827,10 @@ export default function App() {
                 style={{
                   padding: "8px 20px", borderRadius: "100px",
                   background: isAtEnd
-                    ? "rgba(255,255,255,0.04)"
+                    ? themeColors.cardBg
                     : `linear-gradient(135deg, ${activeColor}35, ${activeColor}18)`,
-                  border: `1px solid ${isAtEnd ? "rgba(255,255,255,0.08)" : activeColor + "45"}`,
-                  color: isAtEnd ? "rgba(255,255,255,0.2)" : "#fff",
+                  border: `1px solid ${isAtEnd ? themeColors.cardBorder : activeColor + "45"}`,
+                  color: isAtEnd ? themeColors.textMuted : "#fff",
                   fontSize: "13px", fontWeight: 600,
                   cursor: isAtEnd ? "not-allowed" : "pointer",
                   transition: "all 0.2s ease", letterSpacing: "0.03em" as const, backdropFilter: "blur(10px)"
@@ -763,7 +848,7 @@ export default function App() {
       {!showTitle && (
         <div style={{
           position: "absolute" as const, bottom: "12px", left: "50%", transform: "translateX(-50%)",
-          fontSize: "10px", color: "rgba(255,255,255,0.16)", letterSpacing: "0.08em", pointerEvents: "none" as const, whiteSpace: "nowrap" as const
+          fontSize: "10px", color: themeColors.textMuted, letterSpacing: "0.08em", pointerEvents: "none" as const, whiteSpace: "nowrap" as const
         }}>
           SPACE / → / CLICK SLIDE — REVEAL · ← / BACKSPACE — STEP BACK · ESC — CLOSE IMAGE
         </div>

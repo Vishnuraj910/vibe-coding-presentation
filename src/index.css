@@ -21,18 +21,22 @@ html, body, #root {
   text-rendering: optimizeLegibility;
 }
 
-/* Light mode (default) */
+/* Theme transition support */
 body {
+  transition: background-color 0.5s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+/* Light mode */
+body.light {
   background-color: #F5F5F7;
   color: #1d1d1f;
-  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-  overflow: hidden;
 }
 
 /* Dark mode */
 body.dark {
-  background-color: #000000;
+  background-color: #080B14;
   color: #f5f5f7;
 }
 

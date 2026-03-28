@@ -1,14 +1,20 @@
 import { Sun, Moon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../context/ThemeContext';
 
-export default function ThemeToggle({ isDark, onToggle }) {
+export default function ThemeToggle() {
+  const { isDark, toggleTheme } = useTheme();
   return (
     <motion.button
-      onClick={onToggle}
+      onClick={toggleTheme}
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.9 }}
-      className="fixed top-4 left-4 sm:top-8 sm:left-8 z-50 glass rounded-full p-3 sm:p-4 group overflow-hidden"
+      className="fixed top-4 left-4 sm:top-6 sm:left-6 z-50 glass rounded-full p-3 sm:p-4 group overflow-hidden"
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      style={{ 
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)'
+      }}
     >
       {/* Background glow on hover */}
       <span className="absolute inset-0 rounded-full bg-white/0 group-hover:bg-white/10 transition-colors duration-300" />
@@ -26,6 +32,7 @@ export default function ThemeToggle({ isDark, onToggle }) {
             damping: 20,
           }}
           className="relative block"
+          style={{ color: 'currentColor' }}
         >
           {isDark ? (
             <Sun className="w-5 h-5 sm:w-6 sm:h-6" />

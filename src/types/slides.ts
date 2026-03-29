@@ -47,6 +47,7 @@ export type AllSlide = Slide & {
 export interface Card {
   title: string;
   image: string;
+  url?: string;
 }
 
 export interface FinalData {

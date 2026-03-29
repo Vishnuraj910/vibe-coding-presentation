@@ -39,14 +39,25 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
   const getGridStyle = () => {
     const count = data.cards.length;
     if (count === 1) {
-      return { gridTemplateColumns: "1fr", maxWidth: "600px", margin: "0 auto", gap: "33px" };
+      return { gridTemplateColumns: "1fr", maxWidth: "600px", margin: "0 auto", gap: "24px" };
     } else if (count === 2) {
-      return { gridTemplateColumns: "repeat(2, 1fr)", maxWidth: "1050px", margin: "0 auto", gap: "33px" };
+      return { gridTemplateColumns: "repeat(2, minmax(0, 1fr))", maxWidth: "1000px", margin: "0 auto", gap: "22px" };
     } else if (count === 3 || count === 4) {
-      return { gridTemplateColumns: "repeat(2, 1fr)", gap: "33px" };
+      return { gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: "20px" };
     } else {
-      return { gridTemplateColumns: "repeat(3, 1fr)", gap: "33px" };
+      return { gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: "16px" };
     }
+  };
+
+  const getCardSize = () => {
+    const count = data.cards.length;
+    if (count <= 2) {
+      return { minImageHeight: "180px", titlePadding: "14px 18px" };
+    }
+    if (count <= 4) {
+      return { minImageHeight: "140px", titlePadding: "12px 16px" };
+    }
+    return { minImageHeight: "110px", titlePadding: "10px 14px" };
   };
 
   const fadeUp = (delay: number) => ({
@@ -62,7 +73,7 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
       flexDirection: "column",
       padding: "38px 64px 34px",
       gap: "28px",
-      overflowY: "auto"
+      overflow: "hidden"
     }}>
       {/* Header Section */}
       <div style={{
@@ -99,13 +110,20 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
       <div style={{
         display: "grid",
         flex: 1,
+        minHeight: 0,
         alignContent: "center",
         ...getGridStyle(),
         ...fadeUp(150)
       }}>
         {data.cards.map((card, i) => (
-          <div
+          <a
             key={i}
+            href={card.url || "#"}
+            target={card.url ? "_blank" : undefined}
+            rel={card.url ? "noopener noreferrer" : undefined}
+            onClick={(e) => {
+              if (!card.url) e.preventDefault();
+            }}
             style={{
               display: "flex",
               flexDirection: "column",
@@ -115,6 +133,7 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
               backdropFilter: "blur(20px) saturate(180%)",
               overflow: "hidden",
               cursor: "pointer",
+              textDecoration: "none",
               transition: `all 0.3s cubic-bezier(0.4, 0, 0.2, 1) ${cardVisible[i] ? "0ms" : "0ms"}`,
               transform: cardVisible[i] ? "scale(1)" : "scale(0.95)",
               opacity: cardVisible[i] ? 1 : 0,
@@ -146,7 +165,7 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
               alignItems: "center",
               justifyContent: "center",
               background: `linear-gradient(135deg, ${sectionColor}15, ${sectionColor}05)`,
-              minHeight: "160px"
+              minHeight: getCardSize().minImageHeight
             }}>
               <img
                 src={card.image}
@@ -162,7 +181,7 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
 
             {/* Title */}
             <div style={{
-              padding: "16px 20px",
+              padding: getCardSize().titlePadding,
               borderTop: `1px solid ${themeColors.cardBorder}`,
               textAlign: "center"
             }}>
@@ -175,7 +194,7 @@ export default function FinalPage({ data, onBack, sectionColor, isDark, themeCol
                 {card.title}
               </span>
             </div>
-          </div>
+          </a>
         ))}
       </div>
 

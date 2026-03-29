@@ -387,11 +387,29 @@
     "cards": [
       {
         "title": "Slides",
-        "image": "/assets/qr-slides.png"
+        "image": "/assets/qr-slides.png",
+        "url": "https://vibe-coding-presentation-dun.vercel.app/"
       },
-      {
+       {
+        "title": "Slides Repo",
+        "image": "/assets/qr-repo.png",
+        "url": "https://github.com/Vishnuraj910/vibe-coding-presentation"
+      },
+    {
+        "title": "Cline Bot",
+        "image": "/assets/qr-cline.png",
+        "url": "https://github.com/cline/cline"
+      },
+    {
+        "title": "Warp CLI",
+        "image": "/assets/qr-warp.png",
+        "url": "https://www.warp.dev/"
+      },
+   
+    {
         "title": "LinkedIn",
-        "image": "/assets/qr-code.png"
+        "image": "/assets/qr-code.png",
+        "url": "https://www.linkedin.com/in/vishnuraj910/"
       }]
       
 
